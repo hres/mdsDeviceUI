@@ -1,5 +1,5 @@
 const search = window.location.search.substr(1);
-const documentURL = "https://rest-dev.hres.ca/mdi/";
+const documentURL = "https://rest-dev.hres.ca/mdi/mdi_search";
 const limit = 25;
 const pagesAllowed = 5;
 var page = 0;
@@ -37,32 +37,22 @@ $(document).ready(() => {
     } else {
         end();
     }
-    var data=[{"incident_id":2040,"incident":{"incident_id": 2040, "mandatory_rt": 0, "receipt_date": "1983-03-23", "incident_type_e": "Recall", "incident_type_f": "Rappel", "hazard_severity_code_e": "UNASSIGNED", "hazard_severity_code_f": "NON ATTRIBUE"},"search":"'-03':10 '-23':11 '0':6 '1983':9 '2040':3 'attribu':30 'code':22,27 'date':8 'e':14,23 'f':18,28 'hazard':20,25 'id':2 'incid':1,12,16 'mandatori':4 'non':29 'rappel':19 'recal':15 'receipt':7 'rt':5 'sever':21,26 'type':13,17 'unassign':24"}]
-        $('#tableWet').DataTable( {
-        data: data,
-        columns: [
-            { title: "Device Id" },
-            { title: "Incident" },
-            { title: "Descrop" },
-            { title: "Risk" },
-            { title: "Trade" },
-            { title: "Usage" }
-        ]
-    } );
 });
 
 
 
 function requestDocuments(q) {
 
-    var url = documentURL + "device?";
+    var url = documentURL + "?";
 
     q.forEach((_q) => {
         console.log(_q)
-        url += ("trade_name=fts." + _q);
+        url += ("&search=fts." + _q);
+        //url += ("trade_name=fts." + _q);
     });
     url+="&offset="+page;
     url+="&limit="+limit;
+    console.log(url)
     const range = (page * limit) + "-" + (((page + 1) * limit) - 1);
 
     $.ajax({
@@ -87,85 +77,60 @@ function requestDocuments(q) {
         }
     });
 
-
-    /*
-    var url = documentURL + "?select=drug_product";
-
-  q.forEach((_q) => {
-
-    url += ("&search=fts." + _q);
-  });
-
-  url += "&order=drug_product->>brand_name";
-
-  const range = (page * limit) + "-" + (((page + 1) * limit) - 1);
-
-  $.ajax({
-		url: url,
-		method: "GET",
-		beforeSend: (xhr) => {
-
-			xhr.setRequestHeader('Range-Unit', 'items');
-			xhr.setRequestHeader('Range', range);
-			xhr.setRequestHeader('Prefer', 'count=exact');
-		},
-		success: (data, status, xhr) => {
-
-			var content = xhr.getResponseHeader('Content-Range');
-      populateTable(data);
-      createPagination(content);
-		},
-    error: (err) => {
-
-      end();
-    }
-	});
-     */
-
-
-
-
 }
 
-
+/***
+ * Create a function similar to the dpd function
+ * @param data
+ */
 function populateTable2(data) {
 
-
     var body = "";
-    /* $('#myTable').DataTable( {
-         data: data,
-         columns: [
-             { title: "incident Id" },
-             { title: "Position" }
-         ]
-     } );*/
     //const drugPageURL = document.documentElement.lang == "fr" ? "drug-fr.html" : "drug.html";
-
     data.forEach((d) => {
+
+        var trade_names="";
+        var company_names="";
+        var risk_classes="";
+
+        console.log(d);
+        if(d.incident.trade_name) {
+            d.incident.trade_name.forEach(function (tname) {
+                trade_names += tname + "<br>"
+            });
+            trade_names=trade_names.substring(0,trade_names.length-4);
+        }
+        if(d.incident.company_name) {
+            d.incident.company_name.forEach(function (name) {
+                company_names += name + "<br>"
+            });
+            company_names=company_names.substring(0,company_names.length-4);
+        }
+        if(d.incident.device_detail) {
+            d.incident.device_detail.forEach(function (detail) {
+                risk_classes += detail.risk_classification + "<br>"
+            });
+            risk_classes=risk_classes.substring(0,risk_classes.length-4);
+        }
         body += "<tr>" +
-            "<td>" + d.device_id + "</td>" +
             "<td>" + d.incident_id + "</td>" +
-            "<td>" + d.pref_desc_e + "</td>" +
-            "<td>" + d.risk_classification + "</td>" +
-            "<td>" + d.trade_name + "</td>" +
-            "<td>" + d.usage_code_term_e + "</td>" +
+            "<td>" + trade_names + "</td>" +
+            "<td>" + company_names + "</td>" +
+            "<td>" + ((document.documentElement.lang == "fr") ?   d.incident.hazard_severity_code_f :   d.incident.hazard_severity_code_e) + "</td>" +
+            "<td>" +risk_classes + "</td>" +
+            "<td>" + ((document.documentElement.lang == "fr") ?   d.incident.incident_type_f :   d.incident.incident_type_e) + "</td>" +""
             "</tr>";
     });
 
-
-
     $("#drug-table").attr("hidden", false);
     $("#table-content").html(body);
-    //$("#table-content2").html(body);
     $("#pagination").attr("hidden", false);
     $("#empty").attr("hidden", true);
-    //$("#refresh").text(makeDate(data[0].drug_product.last_refresh));
 }
 
-//dpd
+//dpd TODO: delete
 function populateTable(data) {
 
-    console.log(data);
 
     var body = "";
 
