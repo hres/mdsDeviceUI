@@ -3,8 +3,7 @@ const documentURL = "https://rest-dev.hres.ca/mdi/mdi_search";
 const limit = 25;
 const pagesAllowed = 5;
 var page = 0;
-var searchdata = [];
-var searchdata2 = [];
+
 
 $(document).ready(() => {
 
