@@ -94,6 +94,7 @@ function populateTable2(data) {
         var risk_classes="";
 
         console.log(d);
+        console.log("date "+d.incident.receipt_date);
         if(d.incident.trade_name) {
             d.incident.trade_name.forEach(function (tname) {
                 trade_names += tname + "<br>"
@@ -118,7 +119,8 @@ function populateTable2(data) {
             "<td>" + company_names + "</td>" +
             "<td>" + ((document.documentElement.lang == "fr") ?   d.incident.hazard_severity_code_f :   d.incident.hazard_severity_code_e) + "</td>" +
             "<td>" +risk_classes + "</td>" +
-            "<td>" + ((document.documentElement.lang == "fr") ?   d.incident.incident_type_f :   d.incident.incident_type_e) + "</td>" +""
+            "<td>" + ((document.documentElement.lang == "fr") ?   d.incident.incident_type_f :   d.incident.incident_type_e) + "</td>" +""+
+            "<td ><span>" +d.incident.receipt_date+ "</span></td>" +
             "</tr>";
     });
 
