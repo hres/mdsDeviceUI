@@ -7,7 +7,7 @@ var cors = require('cors');
 
 gulpfile.task('connect-server-start', function (done) {
     connect.server({
-        root: "build",
+        root: "mdi",
         // host:"127.0.0.1",
         port: 2121,
         middleware: function() {
