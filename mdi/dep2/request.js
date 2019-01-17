@@ -137,9 +137,9 @@ function populateTable2(data) {
 
     $("#drug-table").attr("hidden", false);
     $("#table-content").html(body);
-    $("#drug-table").tablesorter({sortList: [[ 6,0]],
+   /* $("#drug-table").tablesorter({sortList: [[ 6,0]],
         theme: 'bootstrap'
-    });
+    });*/
     $("#pagination").attr("hidden", false);
     $("#empty").attr("hidden", true);
 }
