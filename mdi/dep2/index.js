@@ -3,7 +3,7 @@
 
 //const autocompleteURL = "https://rest-dev.hres.ca/dpd/dpd_lookup";
 const autocompleteURL = "https://rest-dev.hres.ca/mdi/mdi_search";
-const autocompleteLimit = 20;
+const autocompleteLimit = 300;
 var resultPageURL = "results.html";
 const illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no."];
 
@@ -28,16 +28,25 @@ $(document).ready(() => {
       term = term.toLowerCase();
 
       $.get(getTermQuery(term), (data) => {
-        console.log(data)
+
         var keywords = $.map(data, (obj) => {
-            console.log(obj)
+          var company="";
+          var trade_name="";
+
+          if(obj.incident.company_name){
+              company=obj.incident.company_name[0];
+
+            }
+          if(obj.incident.trade_name){
+            trade_name=obj.incident.trade_name[0];
+          }
 
           if (document.documentElement.lang == "fr") {
-            return  [obj.incident.trade_name + " (trade name)", obj.incident.incident_type_fr + " (entreprise)"];
+            return  [obj.incident.trade_name + " (trade name)", obj.incident.incident_type_f + " (entreprise)"];
            // return [obj.ingredient + " (ingrédient)", obj.company_name + " (entreprise)", obj.brand_name + " (marque)"];
           }
           else {
-            return  [obj.incident.trade_name + " (trade name)", obj.incident.incident_type_en + " (entreprise)"];
+            return  [trade_name + " (trade name)", obj.incident.incident_type_e +  " (incident type)",company +"(company)"];
            // return [obj.ingredient + " (ingredient)", obj.company_name + " (company)", obj.brand_name + " (brand)"];
           }
         });
@@ -61,7 +70,7 @@ function getTermQuery(term) {
 
   //return autocompleteURL + "?or=(or(brand_name.ilike." + term + "*,company_name.ilike." + term + "*),ingredient.ilike." + term + "*)&limit=" + autocompleteLimit;
   //return autocompleteURL + "?or=(or(trade_name.ilike." + term + "*,company_name.ilike." + term + "*),incident_type_e.ilike." + term + "*)&limit=" + autocompleteLimit;
-  var temp= autocompleteURL + "?(incident.trade_name.ilike."+term+"*,incident.incident_type_e.ilike."+term+"*,incident.incident_type_f.ilike."+term+"*)&limit=" + autocompleteLimit;
+  var temp= autocompleteURL + "?(incident.trade_name.ilike."+term+"*,incident.company_name.ilike."+term+"*,incident.incident_type_e.ilike."+term+"*)&limit=" + autocompleteLimit;
   console.log(temp);
  return temp
 }
