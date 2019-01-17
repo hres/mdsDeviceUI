@@ -3,6 +3,25 @@ const documentURL = "https://rest-dev.hres.ca/mdi/mdi_search";
 const limit = 25;
 const pagesAllowed = 5;
 var page = 0;
+var dataSet={
+    "bDeferRender": true,
+        "ajaxSource": "ajax/datasource.json",
+        "order": [5, "desc"],
+        "columns": [
+        { "data": "TITLE", "className": "nws-tbl-ttl h4" },
+        { "data": "PUBDATE", "className": "nws-tbl-date" },
+        { "data": "DEPT", "className": "nws-tbl-dept" },
+        { "data": "TYPE", "className": "nws-tbl-type" },
+        { "data": "TEASER",  "className": "nws-tbl-desc" },
+        { "data": "LOCATION",  "visible": false },
+        { "data": "AUDIENCE",  "visible": false },
+        { "data": "SUBJECT", "visible": false },
+        { "data": "MINISTER", "visible": false }
+    ]};
+
+$(document).on("xhr", ".wb-tables", function(e, settings, json, xhr) {
+    console.error("foof")
+});
 
 
 $(document).ready(() => {
@@ -11,8 +30,6 @@ $(document).ready(() => {
     var queries = search.split("&");
     var queryObj = {};
 
-    console.log("Search is " + search);
-    console.log(queries)
     queries.forEach((query) => {
 
         if (query.indexOf("=") > -1) {
@@ -31,9 +48,8 @@ $(document).ready(() => {
             i=i-1; //dont increment
         }
     }
-
-    console.log("qis "+q);
-
+   initTableWet();
+/*
     $("#terms").text(q.join(" "));
     console.log(q);
     if (q) {
@@ -41,16 +57,55 @@ $(document).ready(() => {
     } else {
         end();
     }
+    $( ".wb-tables" ).trigger( "wb-init.wb-tables" );
+*/
 });
 
+function  getURL(){
+
+    return "https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall&offset=0&limit=25"
+
+}
+function initTableWet() {
+
+    var lang = ' en';
+    var pType = 'sbd';
+    // var term = getParameterByName('term');
+    var url=getURL();
+
+
+   /*$('#test').DataTable( {
+        ajax: url
+    });*/
+
+    window['wb-tables'] = {
+        'processing': true,
+        'ajax': {
+            'url': url,
+            dataSrc:'',
+            'cache': true
+        },
+        'bStateSave': true,
+        'columns': [
+            {data: 'incident.receipt_date'},
+            {data:'incident.incident_id'}
+        ]
+    }
+
+}
+
+
+function OnFail(){
+
+    console.warn("failed");
+}
 
 
 function requestDocuments(q) {
 
     var url = documentURL;
     if(q[0].length>0){ //TODO hacks
-       //https://rest-dev.hres.ca/mdi/mdi_search?&offset=0&limit=25
-        console.log("greater  than zero")
+
         url = documentURL + "?select=incident.incident_id";
         q.forEach((_q) => {
             //https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.123
@@ -63,7 +118,6 @@ function requestDocuments(q) {
 
     url+="&offset="+page;
     url+="&limit="+limit;
-    console.log(url)
     const range = (page * limit) + "-" + (((page + 1) * limit) - 1);
 
     $.ajax({
@@ -78,7 +132,6 @@ function requestDocuments(q) {
         success: (data, status, xhr) => {
 
             var content = xhr.getResponseHeader('Content-Range');
-            console.log(content);
             populateTable2(data);
             createPagination(content);
         },
@@ -104,8 +157,6 @@ function populateTable2(data) {
         var company_names="";
         var risk_classes="";
 
-        console.log(d);
-        console.log("date "+d.incident.receipt_date);
         if(d.incident.trade_name) {
             d.incident.trade_name.forEach(function (tname) {
                 trade_names += tname + "<br>"
@@ -204,7 +255,6 @@ function travel(page) {
 
         if (c.startsWith("q=")) q = c;
     });
-    console.log("travelling")
     window.location.href = "results.html?" + q + "&page=" + page;
 }
 
@@ -248,7 +298,6 @@ function ExportTableToCSV($table, filename) {
             .split(tmpColDelim).join(colDelim) + '"',
         // Data URI
         csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
-    //console.log(csv);
 
     if (window.navigator.msSaveBlob) { // IE 10+
         //alert('IE' + csv);
