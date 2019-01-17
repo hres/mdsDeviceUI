@@ -46,7 +46,7 @@ $(document).ready(() => {
            // return [obj.ingredient + " (ingrédient)", obj.company_name + " (entreprise)", obj.brand_name + " (marque)"];
           }
           else {
-            return  [trade_name + " (trade name)", obj.incident.incident_type_e +  " (incident type)",company +"(company)"];
+            return  [trade_name + " [trade name]", obj.incident.incident_type_e +  " [incident type]",company +" [company]"];
            // return [obj.ingredient + " (ingredient)", obj.company_name + " (company)", obj.brand_name + " (brand)"];
           }
         });

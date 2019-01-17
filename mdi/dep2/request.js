@@ -26,7 +26,7 @@ $(document).ready(() => {
     //remove brackets
     for(let i=0;i<q.length;i++){
         let _q=q[i];
-        if (_q.indexOf("(") > -1 || _q.indexOf(")") > -1 ||q.length==0){
+        if (_q.indexOf("[") > -1 || _q.indexOf("[") > -1 ||q.length==0){
             q.splice(q.indexOf(_q), 1);
             i=i-1; //dont increment
         }
