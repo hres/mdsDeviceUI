@@ -31,6 +31,27 @@
   <script src="dep2/autocomplete.min.js"></script>
   <!-- use 'dep/index.min.js' if required -->
   <script src="dep2/index.js"></script>
+<!--  <script src="dep2/jquery-ui-1.12.1.multiselect/jquery-ui.js"></script>-->
+  <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <!-- RequireJS -->
+  <script type="text/javascript" src="./vendor/require.js"></script>
+  <!-- RequireJS -->
+  <script type="text/javascript">
+    require.config({
+      baseUrl: './vendor/lucene-query-parser/'
+    });
+    var parser=""
+    require(['./vendor/lucene-query-parser.js'], function(lucenequeryparser) {
+
+      // Use the Lucene Query Parser library here
+      a_parser=lucenequeryparser;
+      var results = lucenequeryparser.parse('example: query');
+      console.log(results);
+    });
+  </script>
+
+
+
 </head>
 <body class="secondary" vocab="http://schema.org/" typeof="WebPage">
   <!-- Google Tag Manager DO NOT REMOVE OR MODIFY - NE PAS SUPPRIMER OU MODIFIER -->
@@ -139,9 +160,6 @@
           </div>
         </form>
       </div>
-        <div>
-            <a href="https://kibana.hres.ca/goto/cdc5fd3e166f8759e46e674cba8de761">Open Dashboard</a>
-        </div>
       <div>
         <a href="https://dhpr-demo.hres.ca/files/2018-11-30%20extract.zip">Download the Entire Medical Device Incident Extract</a>
       </div>

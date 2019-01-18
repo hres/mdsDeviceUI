@@ -9,17 +9,18 @@ initTableWet();
 });
 
 function  getURL(){
-    return "https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall&limit=400"
+    return "https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall"
 }
 function initTableWet() {
 
     window['wb-tables'] = {
-        'processing': true,
-        'ajax': {
-            'url': getURL(),
-            dataSrc:'',
+        "processing": true,
+        "ajax": {
+            "url": getURL(),
+            "dataSrc":'',
             "searching" : false,
-            'cache': true
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, 'All']],
+            "cache": true
         },
         'bStateSave': true,
         'columns': [

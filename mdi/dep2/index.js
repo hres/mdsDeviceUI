@@ -9,12 +9,16 @@ const illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no."];
 
 $(document).ready(() => {
 
-  if (document.documentElement.lang == "fr") resultPageURL = "results-fr.html";
+  $( ".selector" ).autocomplete({
+    appendTo: "#search"
+  });
+
+  /*if (document.documentElement.lang == "fr") resultPageURL = "results-fr.html";
 
   $.get("https://rest-dev.hres.ca/dpd/dpd_search?select=drug_product&limit=1", (res) => {
 
     $("#refresh").text(makeDate(res[0].drug_product.last_refresh));
-  });
+  });*/
   /**
    $.get("https://rest-dev.hres.ca/dpd/dpd_search?select=drug_product&limit=1", (res) => {
 
@@ -25,18 +29,22 @@ $(document).ready(() => {
     selector: "#search",
     minChars: 2,
     source: (term, suggest) => {
-      term = term.toLowerCase();
-
+      //term = term.toLowerCase();
+       console.log("Term "+term);
+       //term='test';
       $.get(getTermQuery(term), (data) => {
+        console.log(data);
 
         var keywords = $.map(data, (obj) => {
           var company="";
           var trade_name="";
 
+          //todo hack
           if(obj.incident.company_name){
               company=obj.incident.company_name[0];
 
             }
+          //todo hack
           if(obj.incident.trade_name){
             trade_name=obj.incident.trade_name[0];
           }
@@ -46,7 +54,7 @@ $(document).ready(() => {
            // return [obj.ingredient + " (ingrédient)", obj.company_name + " (entreprise)", obj.brand_name + " (marque)"];
           }
           else {
-            return  [trade_name + " [trade name]", obj.incident.incident_type_e +  " [incident type]",company +" [company]"];
+            return  ["[trade name]: "+trade_name, "[incident type]: "+ obj.incident.incident_type_e," [company]: "+company];
            // return [obj.ingredient + " (ingredient)", obj.company_name + " (company)", obj.brand_name + " (brand)"];
           }
         });
@@ -66,6 +74,30 @@ $(document).ready(() => {
   })
 });
 
+
+function parseLucene(query){
+  var result="";
+  console.log("start parse");
+  console.log("ASFDASDAA"+query.left);
+  //if(!query) return result;
+  var ptr=query.left;
+
+  while(ptr.right){
+    if(ptr.left) {
+      console.log("Field left:" + ptr.left.field);
+      console.log("term left:" + ptr.left.term);
+    }
+    if(ptr.right) {
+      console.log("Field right:" + ptr.right.field);
+      console.log("term right:" + ptr.right.term);
+    }
+    ptr=ptr.right;
+  }
+
+
+}
+
+
 function getTermQuery(term) {
 
   //return autocompleteURL + "?or=(or(brand_name.ilike." + term + "*,company_name.ilike." + term + "*),ingredient.ilike." + term + "*)&limit=" + autocompleteLimit;
@@ -75,10 +107,25 @@ function getTermQuery(term) {
  return temp
 }
 
+//var lucene=require('lucenequeryparser');
+
 function passRequest() {
 
-  var string = $("#search").val();
-  var search = string.split(" ");
+  var queryString = $("#search").val();
+
+
+  require(['./vendor/lucene-query-parser.js'], function(lucenequeryparser) {
+
+    // Use the Lucene Query Parser library here
+    var queryString = $("#search").val();
+    var results = lucenequeryparser.parse(queryString);
+    parseLucene(results);
+    console.log(results);
+  });
+
+
+
+ var search = queryString.split(" ");
 
   illegal.forEach((def) => {
 
@@ -89,7 +136,7 @@ function passRequest() {
 
   if (search.length > 0) {
 
-    window.location.href = resultPageURL + "?q=" + search.join("%20");
+   // window.location.href = resultPageURL + "?q=" + search.join("%20");
   }
 }
 
