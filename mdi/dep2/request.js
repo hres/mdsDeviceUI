@@ -3,30 +3,11 @@ const documentURL = "https://rest-dev.hres.ca/mdi/mdi_search";
 const limit = 25;
 const pagesAllowed = 5;
 var page = 0;
-var dataSet={
-    "bDeferRender": true,
-        "ajaxSource": "ajax/datasource.json",
-        "order": [5, "desc"],
-        "columns": [
-        { "data": "TITLE", "className": "nws-tbl-ttl h4" },
-        { "data": "PUBDATE", "className": "nws-tbl-date" },
-        { "data": "DEPT", "className": "nws-tbl-dept" },
-        { "data": "TYPE", "className": "nws-tbl-type" },
-        { "data": "TEASER",  "className": "nws-tbl-desc" },
-        { "data": "LOCATION",  "visible": false },
-        { "data": "AUDIENCE",  "visible": false },
-        { "data": "SUBJECT", "visible": false },
-        { "data": "MINISTER", "visible": false }
-    ]};
-
-$(document).on("xhr", ".wb-tables", function(e, settings, json, xhr) {
-    console.error("foof")
-});
 
 
 $(document).ready(() => {
 
-    var q;
+  /*  var q;
     var queries = search.split("&");
     var queryObj = {};
 
@@ -47,60 +28,160 @@ $(document).ready(() => {
             q.splice(q.indexOf(_q), 1);
             i=i-1; //dont increment
         }
-    }
+    }*/
    initTableWet();
-/*
-    $("#terms").text(q.join(" "));
-    console.log(q);
-    if (q) {
-        requestDocuments(q);
-    } else {
-        end();
-    }
-    $( ".wb-tables" ).trigger( "wb-init.wb-tables" );
-*/
+
 });
 
 function  getURL(){
 
-    return "https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall&offset=0&limit=25"
+    return "https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall&limit=400"
 
 }
 function initTableWet() {
 
-    var lang = ' en';
-    var pType = 'sbd';
-    // var term = getParameterByName('term');
-    var url=getURL();
-
-
-   /*$('#test').DataTable( {
-        ajax: url
-    });*/
-
     window['wb-tables'] = {
         'processing': true,
         'ajax': {
-            'url': url,
+            'url': getURL(),
             dataSrc:'',
+            "searching" : false,
             'cache': true
         },
         'bStateSave': true,
         'columns': [
-            {data: 'incident.receipt_date'},
-            {data:'incident.incident_id'}
+            {data:'incident.incident_id'},
+            {
+                'data': 'incident.trade_name',
+                'render': function (data, type, full, meta) {
+                    return arrayNameDisplay(data);
+
+                }
+            },
+            {
+                'data': 'incident.company_name',
+                'render': function (data, type, full, meta) {
+                    return arrayNameDisplay(data);
+                }
+            },
+            {
+                'data': 'incident.hazard_severity_code_e',
+                'render': function (data, type, full, meta) {
+                    return hazardDisplay(data,full);
+
+                }
+            },
+            {
+                'data': 'risk_classification',
+                'render': function (data, type, full, meta) {
+
+                    return riskNameDisplay(data,full);
+                }
+            },
+            {
+                'data': 'incident_type_e',
+                'render': function (data, type, full, meta) {
+                    return incidentTypeDisplay(data,full);
+
+                }
+            },
+            {
+                'data': 'incident.receipt_date',
+                'render': function (data, type, full, meta) {
+                    return trimString(data);
+
+                }
+            }
         ]
     }
+}
+
+function isEnglish(){
+    return  document.documentElement.lang === "en"
+}
+
+function isFrench(){
+    return !isEnglish();
+}
+
+/**
+ * If data is empty ensures it is replaced with an empty string
+ * @param data
+ * @returns {*}
+ */
+function trimString(data) {
+   if(!data)return "";
+   return $.trim(data);
 
 }
 
+function riskNameDisplay(data,full){
+    //full.incident.device_detail
+    //detail.risk_classification
+    if(!full.incident || !full.incident.device_detail){
+        return "";
+    }
+    var displayName="";
+    var devices=full.incident.device_detail;
+
+    for(var i=0;i<devices.length;i++){
+        displayName+=devices[i].risk_classification+"<br>"
+    }
+    displayName=displayName.substring(0,displayName.length-4);
+
+    return displayName;
+}
+
+function hazardDisplay(data,full){
+    var displayValue="";
+    if(isFrench()){
+        displayValue=full.incident.hazard_severity_code_f;
+    }else{
+        displayValue=full.incident.hazard_severity_code_e;
+    }
+    return(trimString(displayValue));
+}
+
+
+function incidentTypeDisplay(data,full){
+    var displayValue=""
+    if(isFrench()){
+        displayValue=full.incident.incident_type_f;
+    }else{
+        displayValue=full.incident.incident_type_e;
+    }
+    return(trimString(displayValue));
+}
+
+
+
+function arrayNameDisplay(data){
+    var displayName="";
+    if(!data) return "";
+    if(!Array.isArray(data)) return $.trim(data)
+    for(var i=0;i<data.length;i++){
+        displayName+=data[i]+"<br>"
+    }
+    displayName=displayName.substring(0,displayName.length-4);
+    return displayName;
+}
+
+
+
+
+/**
+ {data: 'incident.receipt_date'}
+ ,
+ *
+ * @constructor
+ */
 
 function OnFail(){
 
     console.warn("failed");
 }
 
-
+//TODO -delete
 function requestDocuments(q) {
 
     var url = documentURL;
@@ -143,6 +224,8 @@ function requestDocuments(q) {
 
 }
 
+
+//TODO -delete
 /***
  * Create a function similar to the dpd function
  * @param data
