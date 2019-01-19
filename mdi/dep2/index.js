@@ -6,72 +6,14 @@ const autocompleteURL = "https://rest-dev.hres.ca/mdi/mdi_search";
 const autocompleteLimit = 300;
 var resultPageURL = "results.html";
 const illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no."];
-
+var searchBoxId="#search";
 $(document).ready(() => {
 
-  $( ".selector" ).autocomplete({
+ /* $( ".selector" ).autocomplete({
     appendTo: "#search"
-  });
-
-  /*if (document.documentElement.lang == "fr") resultPageURL = "results-fr.html";
-
-  $.get("https://rest-dev.hres.ca/dpd/dpd_search?select=drug_product&limit=1", (res) => {
-
-    $("#refresh").text(makeDate(res[0].drug_product.last_refresh));
   });*/
-  /**
-   $.get("https://rest-dev.hres.ca/dpd/dpd_search?select=drug_product&limit=1", (res) => {
 
-      $("#refresh").text(makeDate(res[0].drug_product.last_refresh));
-    });
-**/
-  new autoComplete({
-    selector: "#search",
-    minChars: 2,
-    source: (term, suggest) => {
-      //term = term.toLowerCase();
-       console.log("Term "+term);
-       //term='test';
-      $.get(getTermQuery(term), (data) => {
-        console.log(data);
-
-        var keywords = $.map(data, (obj) => {
-          var company="";
-          var trade_name="";
-
-          //todo hack
-          if(obj.incident.company_name){
-              company=obj.incident.company_name[0];
-
-            }
-          //todo hack
-          if(obj.incident.trade_name){
-            trade_name=obj.incident.trade_name[0];
-          }
-
-          if (document.documentElement.lang == "fr") {
-            return  [obj.incident.trade_name + " (trade name)", obj.incident.incident_type_f + " (entreprise)"];
-           // return [obj.ingredient + " (ingrédient)", obj.company_name + " (entreprise)", obj.brand_name + " (marque)"];
-          }
-          else {
-            return  ["[trade name]: "+trade_name, "[incident type]: "+ obj.incident.incident_type_e," [company]: "+company];
-           // return [obj.ingredient + " (ingredient)", obj.company_name + " (company)", obj.brand_name + " (brand)"];
-          }
-        });
-
-        var suggestions = [];
-
-        keywords.forEach((keyword) => {
-          if (keyword.toLowerCase().indexOf(term) > -1) {
-            const pushKeyword = keyword.toLowerCase()
-            if (!suggestions.includes(pushKeyword)) suggestions.push(pushKeyword);
-          }
-        });
-
-        suggest(suggestions);
-      });
-    }
-  })
+  autocompleteInit()
 });
 
 
@@ -97,7 +39,11 @@ function parseLucene(query){
 
 }
 
-
+/**
+ * Create the autocomplete url based on
+ * @param term
+ * @returns {string}
+ */
 function getTermQuery(term) {
 
   //return autocompleteURL + "?or=(or(brand_name.ilike." + term + "*,company_name.ilike." + term + "*),ingredient.ilike." + term + "*)&limit=" + autocompleteLimit;
@@ -108,13 +54,14 @@ function getTermQuery(term) {
 }
 
 //var lucene=require('lucenequeryparser');
-
+/**
+ * Gets the raw request and parses it. Used to pass to the results page
+ */
 function passRequest() {
 
-  var queryString = $("#search").val();
+  var queryString = $(searchBoxId).val();
 
-
-  require(['./vendor/lucene-query-parser.js'], function(lucenequeryparser) {
+  require(['./vendor/lucene-query-parser.js'],'test' ,function(lucenequeryparser) {
 
     // Use the Lucene Query Parser library here
     var queryString = $("#search").val();
@@ -122,7 +69,6 @@ function passRequest() {
     parseLucene(results);
     console.log(results);
   });
-
 
 
  var search = queryString.split(" ");
@@ -140,11 +86,84 @@ function passRequest() {
   }
 }
 
-function makeDate(iso) {
+  var availableTags = [
+    "Johnson & Johnson [conpany]",
+     "Acme [company]",
+     "My hip (id re) [device]",
+     "",
+    "OR",
+    "AND",
+    "NOT"
+  ];
+  function split( val ) {
+    var temp=val.split(/\s+/);
+    console.log("SPlit"+temp)
+    return val.split(/\s+/);
+  }
+  function extractLast( term ) {
+    var temp=split( term ).pop();
+    console.log(term);
+    if(temp==' ') temp="";
+    console.log(temp)
+    return temp;
+  }
 
-  const d = new Date(iso);
-  const month = d.getMonth() < 9 ? "0" + (d.getMonth() + 1) : (d.getMonth() + 1);
-  const day = d.getDate() < 10 ? "0" + d.getDate() : d.getDate()
+  function autocompleteInit() {
+    $("#search")
+    // don't navigate away from the field on tab when selecting an item
+        .on("keydown", function (event) {
+          console.log(event.keyCode)
+          if (event.keyCode === $.ui.keyCode.TAB &&
+              $(this).autocomplete("instance").menu.active) {
+            event.preventDefault();
+          } else if (event.keyCode === $.ui.keyCode.SPACE) {
+            $(".ui-menu-item").hide();
+            //$(this).autocomplete("instance").menu.inactive;
+          }
+        })
+        .autocomplete({
+          minLength: 2,
+          source: function (request, response) {
+            // delegate back to autocomplete, but extract the last term
+            const term = $.trim(request.term)
+            //var reg = new RegExp($.ui.autocomplete.escapeRegex(term), "i");
+            if (term !== "")
+              response($.ui.autocomplete.filter(
+                  availableTags, extractLast(term)));
+            //else
+              //$( "#search" ).autocomplete( "close" );
 
-  return d.getFullYear() + "-" + month + "-" + day;
-}
+          },
+          focus: function () {
+            // prevent value inserted on focus
+            return false;
+          },
+          select: function (event, ui) {
+            console.log(ui)
+            var terms = split(this.value);
+            // remove the current input
+            terms.pop();
+            // add the selected item
+            terms.push(ui.item.value);
+            // add placeholder to get the comma-and-space at the end
+            terms.push("");
+            this.value = terms.join(" ");
+            return false;
+          }
+        });
+
+  }
+
+/**
+ * Manages the state of the search ui
+ */
+function updateDateState(){
+    if($("#is-date-range").is(":checked")){
+      $("#date-group").toggleClass('hidden visible');
+    }else{
+      $("#date-group").toggleClass('visible hidden');
+      $("#startdate").val(null);
+      $("#enddate").val(null);
+    }
+
+  }
