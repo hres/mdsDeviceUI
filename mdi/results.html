@@ -132,22 +132,31 @@
     </nav>
 </header>
 <main role="main" property="mainContentOfPage" class="container">
-    <h1 property="name" id="wb-cont">Medical Device Incident Results<a class="btn btn-default" href="index_mdi.html" style="float: right">New Search</a></h1>
+    <h1 property="name" id="wb-cont">Medical Device Incident Results</h1>
+    <div class="row">
+        <div class="col-xs-12">
+            <a class="btn btn-default" href="index_mdi.html">New Search</a>
+        </div>
+        <div class="col-xs-12">
+            <p class="help-block">Results for: <strong><span id="terms"></span></strong></p>
+        </div>
+    </div>
+
     <div>
-            <table id="test" class="wb-tables table table-striped table-hover" data-wb-tables='{ "searching" : false }'>
-                <thead>
-                <tr>
-                    <th scope="col">Incident ID</th>
-                    <th scope="col">Incident ID</th>
-                    <th scope="col">Devices</th>
-                    <th scope="col">Company Name</th>
-                    <th scope="col">Hazard Severity</th>
-                    <th scope="col">Risk Class</th>
-                    <th scope="col">Type</th>
-                    <th scope="col" width="10%" >Receipt Date</th>
-                </tr>
-                </thead>
-            </table>
+        <table id="test" class="wb-tables table table-striped table-hover" data-wb-tables='{ "searching" : false }'>
+            <thead>
+            <tr>
+                <th scope="col">Incident ID</th>
+                <th scope="col">Incident ID</th>
+                <th scope="col">Devices</th>
+                <th scope="col">Company Name</th>
+                <th scope="col">Hazard Severity</th>
+                <th scope="col">Risk Class</th>
+                <th scope="col">Type</th>
+                <th scope="col" width="10%">Receipt Date</th>
+            </tr>
+            </thead>
+        </table>
     </div>
     <div>
         <li class="btn-group btn-group-xs">
@@ -204,7 +213,6 @@
 <script src="GCWeb/js/theme.min.js"></script>
 <!--PROJECT REFERENCES-->
 <script type="text/javascript" src="proj_dep/js/mdi_results.js"></script>
-
 <!--   END PROJECT REFERENCES-->
 
 </body>

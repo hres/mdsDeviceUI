@@ -1,16 +1,65 @@
 
 const documentURL = "https://rest-dev.hres.ca/mdi/mdi_search";
 const limit = 25;
-
+const termsTag="#terms";
 $(document).ready(() => {
 
 initTableWet();
 
+
 });
 
 function  getURL(){
-    return "https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall"
+    var q=getQueryTermsFromUrl();
+    var url="";
+    _uiSetTermsDisplay(q);
+    if (q) {
+       url=_constructURLFromTerms(q);
+    } else {
+        end();
+    }
+    url="https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall";//TODO Temp
+    return url;
 }
+
+/**
+ * Sets the terms UI with the terms values
+ * @param q
+ * @private
+ */
+function _uiSetTermsDisplay(q){
+    $("termsTag").text(q.join(" "));
+}
+
+function getQueryTermsFromUrl(){
+    var q;
+    var queryObj = {};
+    const search = window.location.search.substr(1);
+    var queries = search.split("&");
+    queries.forEach((query) => {
+
+        if (query.indexOf("=") > -1) {
+            var qc = query.split("=");
+            queryObj[qc[0]] = decodeURIComponent(qc[1]);
+        }
+    });
+
+    if (queryObj.hasOwnProperty("q")) q = (queryObj.q).split(" ");
+    if (queryObj.hasOwnProperty("page") && !isNaN(queryObj.page)) page = parseInt(queryObj.page) - 1;
+    //remove brackets
+    for(let i=0;i<q.length;i++){
+        let _q=q[i];
+        if (_q.indexOf("[") > -1 || _q.indexOf("]") > -1 ||q.length==0){
+            q.splice(q.indexOf(_q), 1);
+            i=i-1; //dont increment
+        }
+    }
+    return q;
+}
+
+
+
+
 function initTableWet() {
 
     window['wb-tables'] = {
@@ -190,5 +239,24 @@ function ExportTableToCSV($table, filename) {
     else {
         $(this).attr({ 'download': filename, 'href': csvData, 'target': '_blank' });
     }
+}
+function _constructURLFromTerms(q) {
+
+    var url = documentURL;
+    if (q[0].length > 0) { //TODO hacks
+        url = documentURL + "?select=incident.incident_id";
+        q.forEach((_q) => {
+            //https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.123
+            //https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.onetouch&search=fts.ultra&search=fts.blood&offset=0&limit=25
+            url += ("&search=fts." + _q);
+        });
+    } else {
+        url = documentURL + "?";
+    }
+
+    //url+="&offset="+page;
+    //url+="&limit="+limit;
+    console.log(url);
+    return url;
 }
 
