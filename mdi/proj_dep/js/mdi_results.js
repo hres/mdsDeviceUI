@@ -1,12 +1,11 @@
 
-const documentURL = "https://rest-dev.hres.ca/mdi/mdi_search";
+const API_URL = "https://rest.hres.ca/mdi/mdi_search";
 const limit = 25;
 const termsTag="#terms";
+const EMPTY_RESULT=""; //in case need to add dash for empty cell (accessibility)
+
 $(document).ready(() => {
-
 initTableWet();
-
-
 });
 
 function  getURL(){
@@ -16,9 +15,10 @@ function  getURL(){
     if (q) {
        url=_constructURLFromTerms(q);
     } else {
-        end();
+        //TODO any cleanup
     }
-    url="https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.recall";//TODO Temp
+    url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=eq.recall&limit=1300";//TODO Temp
+    url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_type_e=neq.RECALL&limit=1300";
     return url;
 }
 
@@ -28,6 +28,7 @@ function  getURL(){
  * @private
  */
 function _uiSetTermsDisplay(q){
+    if(!q) return;
     $("termsTag").text(q.join(" "));
 }
 
@@ -47,6 +48,7 @@ function getQueryTermsFromUrl(){
     if (queryObj.hasOwnProperty("q")) q = (queryObj.q).split(" ");
     if (queryObj.hasOwnProperty("page") && !isNaN(queryObj.page)) page = parseInt(queryObj.page) - 1;
     //remove brackets
+    if(!q) return "";
     for(let i=0;i<q.length;i++){
         let _q=q[i];
         if (_q.indexOf("[") > -1 || _q.indexOf("]") > -1 ||q.length==0){
@@ -61,7 +63,7 @@ function getQueryTermsFromUrl(){
 
 
 function initTableWet() {
-
+    //TODO update initialization?
     window['wb-tables'] = {
         "processing": true,
         "ajax": {
@@ -133,8 +135,10 @@ function isFrench(){
  * @returns {*}
  */
 function trimString(data) {
-   if(!data)return "";
-   return $.trim(data);
+   if(!data)return EMPTY_RESULT;
+   var result=$.trim(data);
+   if(!result) result="-";
+   return result
 
 }
 
@@ -142,7 +146,7 @@ function riskNameDisplay(data,full){
     //full.incident.device_detail
     //detail.risk_classification
     if(!full.incident || !full.incident.device_detail){
-        return "";
+        return EMPTY_RESULT;
     }
     var displayName="";
     var devices=full.incident.device_detail;
@@ -178,7 +182,7 @@ function incidentTypeDisplay(data,full){
 
 function arrayNameDisplay(data){
     var displayName="";
-    if(!data) return "";
+    if(!data) return EMPTY_RESULT;
     if(!Array.isArray(data)) return $.trim(data)
     for(var i=0;i<data.length;i++){
         displayName+=data[i]+"<br>"
@@ -242,16 +246,16 @@ function ExportTableToCSV($table, filename) {
 }
 function _constructURLFromTerms(q) {
 
-    var url = documentURL;
+    var url = API_URL;
     if (q[0].length > 0) { //TODO hacks
-        url = documentURL + "?select=incident.incident_id";
+        url = API_URL + "?select=incident.incident_id";
         q.forEach((_q) => {
             //https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.123
             //https://rest-dev.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.onetouch&search=fts.ultra&search=fts.blood&offset=0&limit=25
             url += ("&search=fts." + _q);
         });
     } else {
-        url = documentURL + "?";
+        url = API_URL + "?";
     }
 
     //url+="&offset="+page;
