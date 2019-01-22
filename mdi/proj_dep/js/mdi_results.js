@@ -8,6 +8,12 @@ $(document).ready(() => {
 initTableWet();
 });
 
+// This must be a hyperlink
+$('#linkExcel').on('click', function (event) {
+    ExportTableToCSV.apply(this, [$('#results-table'), 'mdi_result.csv']);
+});
+
+
 function  getURL(){
     var q=getQueryTermsFromUrl();
     var url="";
