@@ -1,15 +1,15 @@
 "use strict";
 
 const AUTOCOMPLETE_URL = "https://rest.hres.ca/mdi/mdi_search";
-const AUTOCOMPLETE_QUERY_LIMIT = 300;
-const MAX_AUTOCOMPLETE_LIST=10;
+const AUTOCOMPLETE_QUERY_LIMIT = 2000;
+const MAX_AUTOCOMPLETE_LIST=8;
 var resultPageURL = "results.html";
 const illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no."];
 const LUCENE_IMPLICIT = "<implicit>";
 var SEARCH_BOX_ID = "#search";
 var SPACE_STRING = " ";
 
-
+//https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.hip&limit=30
 $(document).ready(() => {
 
     autocompleteInit()
@@ -87,35 +87,81 @@ function _getLuceneTerm(node) {
 function getTermQuery(term) {
 
     //var temp = AUTOCOMPLETE_URL + "?(incident.trade_name.ilike." + term + "*,incident.company_name.ilike." + term + "*,incident.incident_type_e.ilike." + term + "*)&limit=" + AUTOCOMPLETE_LIMIT;
-    if (document.documentElement.lang == "fr") {
+  /*  if (document.documentElement.lang == "fr") {
         return AUTOCOMPLETE_URL + "?(incident.trade_name.ilike." + term + "*,incident.incident_type_f.ilike."  + term + "*)&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
-    }
-    return AUTOCOMPLETE_URL + "?(incident.trade_name.ilike." + term +"*,incident.company_name.ilike." + term + "*,incident.incident_type_e.ilike." + term  + "*)&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
+    }*/
+    //return AUTOCOMPLETE_URL + "?or(incident.trade_name.ilike." + term +"*,incident.company_name.ilike." + term + "*,incident.incident_type_e.ilike." + term  + "*)&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
+    return AUTOCOMPLETE_URL + "?select=incident.incident_id&search=plfts."+ encodeURIComponent(term)+"*&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
 
-   // console.log(temp);
-    //return temp
 }
 
 function processAutoCompleteTerms(term,data){
+    var suggestions = [];
+
+    if(!term) return [];
         var keywords = $.map(data, (obj) => {
-            console.log(obj)
+
+            var inc_type = ""
+            //   console.log(obj)
+            /*
+              if (document.documentElement.lang == "fr") {
+                  return  [obj.incident.trade_name + " [device]",,obj.incident.company_name + " [company]", obj.incident.incident_type_f + " [type]"];
+              }
+              else {
+                  return  [obj.incident.trade_name + " [device]",obj.incident.company_name + " [company]", obj.incident.incident_type_e + " [type]"];
+              }*/
             if (document.documentElement.lang == "fr") {
-                return  [obj.incident.trade_name + " [device]",,obj.incident.company_name + " [company]", obj.incident.incident_type_f + " [type]"];
+                inc_type = obj.incident.incident_type_f;
+            } else {
+                inc_type = obj.incident.incident_type_e;
             }
-            else {
-                return  [obj.incident.trade_name + " [device]",obj.incident.company_name + " [company]", obj.incident.incident_type_e + " [type]"];
+            var inc_trade="";
+            if(obj.incident.trade_name) {
+                for (var i = 0; i < obj.incident.trade_name.length; i++) {
+                    inc_trade += obj.incident.trade_name[i] + "|";
+                }
             }
+            var inc_company="";
+            if(obj.incident.company_name) {
+                for (var i = 0; i < obj.incident.company_name.length; i++) {
+                    inc_company += obj.incident.company_name[i] + "|";
+                }
+            }
+
+            if(inc_trade.length>0) inc_trade=inc_trade.substr(0,inc_trade.length-1);
+            return [inc_trade + " [device]", inc_company + " [company]", inc_type+ " [type]"];
         });
-        console.log(keywords);
-        var suggestions = [];
+        //TODO multiple trade names and companies
+
+       // VITEK 2
+        term=$.trim(term.toLowerCase());
         keywords.forEach((keyword) => {
             if (keyword.toLowerCase().indexOf(term) > -1) {
-                const pushKeyword = keyword.toLowerCase()
-                if (!suggestions.includes(pushKeyword)) suggestions.push(pushKeyword);
+                var typeIndex=keyword.lastIndexOf('[');
+                var type=keyword.substr(typeIndex,(keyword.length-typeIndex));
+                keyword=keyword.substring(0,typeIndex);
+                var pushKeyword = keyword.toLowerCase().split('|');
+                pushKeyword.forEach((word)=>
+                {
+                    // _geKeyWordList(keyword.toLowerCase());
+                    if($.trim(word)) {
+                        if (!suggestions.includes(word + " " + type)) {
+                            suggestions.push(word + " " + type);
+                        }
+                    }
+                });
             }
         });
+      //  console.log(suggestions);
         return suggestions;
 }
+
+function _getKeywordList(word){
+    var result=[];
+    if(!word) return result;
+
+}
+
 
 /**
  * Gets the raw request and parses it. Used to pass to the results page
@@ -152,14 +198,16 @@ function passRequest() {
 
 function split(val) {
    //splitting on space
+    return val.split(/]\s+/);
+}
+function splitSpace(val) {
+    //splitting on space
     return val.split(/\s+/);
 }
-
 function extractLast(term) {
     var temp = split(term).pop();
     console.log(term);
     if (temp == ' ') temp = "";
-    //console.warn("Last term'+temp)
     return temp;
 }
 
@@ -206,13 +254,17 @@ function autocompleteInit() {
                 return false;
             },
             select: function (event, ui) {
+                console.log("value "+this.value);
                 var terms = split(this.value);
                 // remove the current input
-                terms.pop();
+                console.log(terms.pop());
                 // add the selected item
+                terms[terms.length-1]=terms[terms.length-1]+"]";
                 terms.push(ui.item.value);
-                // add placeholder to get the comma-and-space at the end
-                terms.push("");
+                // add placeholder
+                //terms.push(" ");
+                terms.push(" ");
+                console.log(terms);
                 this.value = terms.join(" ");
                 return false;
             }
