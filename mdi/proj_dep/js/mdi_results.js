@@ -19,6 +19,7 @@ function  getURL(){
     }
     url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=eq.recall&limit=1300";//TODO Temp
     url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_type_e=neq.RECALL&limit=1300";
+    url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.VITEK&limit=3000";
     return url;
 }
 
@@ -111,6 +112,13 @@ function initTableWet() {
                 }
             },
             {
+                'data': 'incident.problem_detail',
+                'render': function (data, type, full, meta) {
+                    return problemDetailDisplay(data,full);
+
+                }
+            },
+            {
                 'data': 'incident.receipt_date',
                 'render': function (data, type, full, meta) {
                     return trimString(data);
@@ -179,6 +187,22 @@ function incidentTypeDisplay(data,full){
     return(trimString(displayValue));
 }
 
+function problemDetailDisplay(data,full){
+    var displayName="";
+    if(!data ||data.length==0) return "";
+    if(isFrench()){
+        for(var i=0;i<data.length;i++){
+            displayName+=data[i].desc_f+"<br>"
+        }
+    }else{
+        //todo fix
+        for(var i=0;i<data.length;i++){
+            displayName+=data[i].desc_e+"<br>"
+        }
+    }
+    displayName=displayName.substring(0,displayName.length-4);
+    return(trimString(displayName));
+}
 
 function arrayNameDisplay(data){
     var displayName="";
