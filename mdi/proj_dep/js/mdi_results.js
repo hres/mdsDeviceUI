@@ -1,7 +1,7 @@
 const limit = 25;
 const termsTag = "#terms";
 const EMPTY_RESULT = ""; //in case need to add dash for empty cell (accessibility)
-
+const MAX_RESULTS=3000;
 $(document).ready(() => {
     initTableWet();
 });
@@ -26,7 +26,7 @@ function getURL() {
         //TODO any cleanup
     }
     //url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=eq.recall&limit=1300";//TODO Temp
-    url = API_URL + "?" + (term_query) + "&limit=1500";
+    url = API_URL + "?" + (term_query) + "&limit="+MAX_RESULTS;
 
     return url;
 }
@@ -340,7 +340,6 @@ function _constructURLFromTerms2(queryObj) {
     var q_device = "";
     var q_type = "";
     var result = ""
-    l
 
     if (!queryObj) return "";
     //https://rest.hres.ca/mdi/mdi_search?incident-%3E%3Etrade_name=plfts.CEMENT&incident-%3E%3Ecompany_name=plfts.BIOMET&incident-%3E%3Eincident_type_e=plfts.Voluntary%20problem%20report&limit=20
