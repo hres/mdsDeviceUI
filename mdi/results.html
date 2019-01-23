@@ -146,14 +146,16 @@
         <table id="results-table" class="wb-tables table table-striped table-hover" data-wb-tables='{ "searching" : false,"lengthMenu": [[10, 25, 50,100, -1], [10, 25, 50,100,"All"]] }'>
             <thead>
             <tr>
-                <th width="5%">Incident ID</th>
-                <th width="20%">Devices</th>
-                <th width="15%">Company Name</th>
-                <th width="20%">Hazard Severity</th>
-                <th width="5%"><span>Risk Class <sup id="fn1-rf"><a class="fn-lnk" href="#fn1"><span class="wb-inv">See footnote </span>1</a></sup></span></th>
-                <th width="10%">Type<br><sup id="fn2-rf"><a class="fn-lnk" href="#fn2"><span class="wb-inv">See footnote </span>2</a></sup></th>
-                <th width="25%">Description</th>
-                <th width="10%">Receipt Date</th>
+                <th scope="col">Incident ID</th>
+                <th scope="col">Devices</th>
+                <th scope="col">Company Name</th>
+                <th scope="col">Hazard Severity</th>
+                <th scope="col"><span>Risk Class <sup id="fn1-rf"><a class="fn-lnk" href="#fn1"><span class="wb-inv">See footnote </span>1</a></sup></span>
+                </th>
+                <th scope="col">Type<br><sup id="fn2-rf"><a class="fn-lnk" href="#fn2"><span
+                        class="wb-inv">See footnote </span>2</a></sup></th>
+                <th scope="col">Description</th>
+                <th scope="col">Receipt Date</th>
             </tr>
             </thead>
         </table>
@@ -168,14 +170,18 @@
         <dl>
             <dt id="fn1-dt">Footnote 1</dt>
             <dd aria-labelledby="fn1-dt" tabindex="-1" id="fn1">
-                <p>Medical devices are classified into one of Classes 1 to IV bt means of classification rules set out in Schedule 1, where Class I represents the lowest risk and Class IV represents the highest risk.</p>
-                <p class="fn-rtn"><a href="#fn1-rf"><span class="wb-inv">Return to footnote </span>1<span class="wb-inv"> referrer</span></a></p>
+                <p>Medical devices are classified into one of Classes 1 to IV bt means of classification rules set out
+                    in Schedule 1, where Class I represents the lowest risk and Class IV represents the highest
+                    risk.</p>
+                <p class="fn-rtn"><a href="#fn1-rf"><span class="wb-inv">Return to footnote </span>1<span
+                        class="wb-inv"> referrer</span></a></p>
             </dd>
 
             <dt id="fn2-dt">Footnote 2</dt>
             <dd aria-labelledby="fn2-dt" tabindex="-1" id="fn2">
                 <p>This field captures the type(s) of report(s) that was(were) received related to an incident.</p>
-                <p class="fn-rtn"><a href="#fn2-rf"><span class="wb-inv">Return to footnote </span>2<span class="wb-inv"> referrer</span></a></p>
+                <p class="fn-rtn"><a href="#fn2-rf"><span class="wb-inv">Return to footnote </span>2<span
+                        class="wb-inv"> referrer</span></a></p>
             </dd>
         </dl>
     </aside>
@@ -229,6 +235,7 @@
 <![endif]-->
 <script src="GCWeb/js/theme.min.js"></script>
 <!--PROJECT REFERENCES-->
+<script type="text/javascript" src="proj_dep/js/globals.js"></script>
 <script type="text/javascript" src="proj_dep/js/mdi_results.js"></script>
 <!--   END PROJECT REFERENCES-->
 

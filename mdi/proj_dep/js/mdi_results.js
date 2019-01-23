@@ -1,5 +1,5 @@
 
-const API_URL = "https://rest.hres.ca/mdi/mdi_search";
+
 const limit = 25;
 const termsTag="#terms";
 const EMPTY_RESULT=""; //in case need to add dash for empty cell (accessibility)
@@ -13,19 +13,25 @@ $('#linkExcel').on('click', function (event) {
     ExportTableToCSV.apply(this, [$('#results-table'), 'mdi_result.csv']);
 });
 
-
+/**
+ * Creates the url for the search functionality
+ * @returns {string}
+ */
 function  getURL(){
     var q=getQueryTermsFromUrl();
     var url="";
-    _uiSetTermsDisplay(q);
+    var term_query="";
+    //_uiSetTermsDisplay(q);
     if (q) {
-       url=_constructURLFromTerms(q);
+        term_query=_constructURLFromTerms(q);
     } else {
         //TODO any cleanup
     }
-    url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=eq.recall&limit=1300";//TODO Temp
-    url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_type_e=neq.RECALL&limit=1300";
-    url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.VITEK&limit=3000";
+    //url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=eq.recall&limit=1300";//TODO Temp
+    //url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_type_e=neq.RECALL&limit=1300";
+    //url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.VITEK&limit=3000";
+    url= API_URL+"?"+ (term_query)+"&limit=1500";
+
     return url;
 }
 
@@ -42,7 +48,9 @@ function _uiSetTermsDisplay(q){
 function getQueryTermsFromUrl(){
     var q;
     var queryObj = {};
-    const search = window.location.search.substr(1);
+    var search = window.location.search.substr(1);
+   // search-decodeURIComponent(search);
+    console.log(search);
     var queries = search.split("&");
     queries.forEach((query) => {
 
@@ -51,31 +59,84 @@ function getQueryTermsFromUrl(){
             queryObj[qc[0]] = decodeURIComponent(qc[1]);
         }
     });
+    console.log(queryObj)
 
-    if (queryObj.hasOwnProperty("q")) q = (queryObj.q).split(" ");
-    if (queryObj.hasOwnProperty("page") && !isNaN(queryObj.page)) page = parseInt(queryObj.page) - 1;
+    //queryObj=$.trim(queryObj);
+    if (queryObj.hasOwnProperty("q")) q = (queryObj.q).split("]");
+    //if (queryObj.hasOwnProperty("page") && !isNaN(queryObj.page)) page = parseInt(queryObj.page) - 1;
     //remove brackets
     if(!q) return "";
-    for(let i=0;i<q.length;i++){
+    console.log(q);
+    q=_collectTermTypes(q);
+    //TODO delete?
+   /* for(let i=0;i<q.length;i++){
         let _q=q[i];
         if (_q.indexOf("[") > -1 || _q.indexOf("]") > -1 ||q.length==0){
             q.splice(q.indexOf(_q), 1);
             i=i-1; //dont increment
         }
-    }
+    }*/
     return q;
 }
 
+/***
+ * Categorizes the term types. Allows to construct query
+ * @param termArray
+ * @returns {string}
+ * @private
+ */
+function _collectTermTypes(termArray){
+    if(!termArray) return "";
+    var result={};
+    //TODO make into a map? or maps for each type
+    result.company=[];
+    result.type=[];
+    result.device=[];
+    result.none=[];
+    for(var i=0;i<termArray.length;i++){
+        var terms=(termArray[i]).split("[");
+        if(terms && terms.length>1) {
+            var value=$.trim(terms[0]);
+            switch ($.trim(terms[1])) {
+                case _MDI_DEVICE_TYPE:
+                    console.log("device");
+                    result.device.push(value);
+                    break;
+                case _MDI_COMPANY_TYPE:
+                    console.log("company");
+                    result.company.push(value);
+                    break;
+                case _MDI_REPORT_TYPE:
+                    console.log("type");
+                    result.type.push(value);
+                    break;
+            }
+        }else{
+            if(terms.isPrototypeOf(Array)&& terms[0].length){
+                result.none.push(terms[0]);
+                console.log("none")
+            }
+        }
+    }
+    console.log(result);
+    return result;
+}
 
-
-
+/**
+ * "columnDefs": [
+ { "width": "5%"},{ "width": "15%"},{ "width": "15%"},{ "width": "15%"},{ "width": "5%"},{ "width": "10%"},{ "width": "10%"},{ "width": "25%"}],
+ */
 function initTableWet() {
     //TODO update initialization?
     window['wb-tables'] = {
         "processing": true,
+        "autoWidth": false,
+        "columnDefs": [
+            { "width": "10%","targets": 7}],
         "ajax": {
             "url": getURL(),
             "dataSrc":'',
+
             "searching" : false,
             "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, 'All']],
             "cache": true
@@ -127,7 +188,7 @@ function initTableWet() {
             {
                 'data': 'incident.receipt_date',
                 'render': function (data, type, full, meta) {
-                    return trimString(data);
+                    return '<span>'+trimString(data)+"</span>";
 
                 }
             }
@@ -274,7 +335,59 @@ function ExportTableToCSV($table, filename) {
         $(this).attr({ 'download': filename, 'href': csvData, 'target': '_blank' });
     }
 }
-function _constructURLFromTerms(q) {
+
+/**
+ * Creates the search query. Assumes this is an and situation
+ * @param queryObj
+ * @private
+ */
+function _constructURLFromTerms(queryObj){
+    var q_company="";
+    var q_device="";
+    var q_type="";
+    var result=""
+
+    if(!queryObj) return"";
+    //https://rest.hres.ca/mdi/mdi_search?incident-%3E%3Etrade_name=plfts.CEMENT&incident-%3E%3Ecompany_name=plfts.BIOMET&incident-%3E%3Eincident_type_e=plfts.Voluntary%20problem%20report&limit=20
+    if(queryObj.company.length===1){
+        q_company = "incident->>company_name=plfts."+encodeURIComponent(queryObj.company[0]);
+        result=q_company;
+    }else if(queryObj.company.length>1) {
+        var base = ("incident->>company_name=and(");
+        console.log(base);
+        for (var i = 0; i < queryObj.company.length; i++) {
+            var a_company = queryObj.company[i];
+            base = base + "plfts." + (a_company) + ",";
+            //fts.FLEXIBLE,fts.DRILL)&limit=20
+        }
+        base = (base.substring(0, base.length - 1)) + ")";
+        q_company=base;
+        result=q_company; //TODO redundant
+    }
+    if(queryObj.device.length===1){
+        q_device = "incident->>trade_name=plfts."+encodeURIComponent(queryObj.device[0]);
+        result+=("&"+q_device);
+    }
+    if(queryObj.type.length===1){
+        console.log("type 1")
+        q_type = "incident->>incident_type_e=plfts.";
+        if(isFrench()){
+            q_type = "incident->>incident_type_f=plfts."
+        }
+        q_type += encodeURIComponent(queryObj.type[0]);
+        result+=("&"+q_type);
+    }
+
+    if(result.indexOf("&")===0){
+        result=result.substring(1,result.length);
+    }
+    return result;
+}
+
+
+//TODO delete
+
+/*function _constructURLFromTerms(q) {
 
     var url = API_URL;
     if (q[0].length > 0) { //TODO hacks
@@ -292,5 +405,5 @@ function _constructURLFromTerms(q) {
     //url+="&limit="+limit;
     console.log(url);
     return url;
-}
+}*/
 
