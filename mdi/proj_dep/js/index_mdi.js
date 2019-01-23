@@ -1,7 +1,7 @@
 "use strict";
 
 const AUTOCOMPLETE_URL = API_URL;
-const AUTOCOMPLETE_QUERY_LIMIT = 2500;
+const AUTOCOMPLETE_QUERY_LIMIT = 50;
 const MAX_AUTOCOMPLETE_LIST = 8;
 const illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no."];
 const LUCENE_IMPLICIT = "<implicit>";
@@ -24,157 +24,76 @@ $(document).ready(() => {
  * @returns {string}
  */
 function getTermQuery(term) {
-   var type_query="incident-%3E%3Eincident_type_e.plfts.";
-   if(document.documentElement.lang === "fr"){
-       type_query="incident-%3E%3Eincident_type_f.plfts.";
-   }
-    return AUTOCOMPLETE_URL+"?or=(or(incident-%3E%3Ecompany_name.plfts."+term+",incident-%3E%3Etrade_name.plfts."+term+"),"+type_query+term+")"+"&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
-
-}
-
-
-function processAutoCompleteTerms2(term,data){
-    var suggestions = [];
-    var unique_company={};
-    var unique_trade={};
-    var unique_type={};
-    if (!term) return [];
-
-   //TODO cleanup
-    for(var i=0;i<data.length;i++){
-        var inc_trade = "";
-        var obj=data[i];
-        if (obj.incident.trade_name) {
-            for (var j = 0; j < obj.incident.trade_name.length; j++) {
-               var word=obj.incident.trade_name[j];
-                if(word.toLowerCase().indexOf(term) > -1){
-                    if(!unique_trade.hasOwnProperty(word)){
-                        suggestions.push((word+ " " + _MDI_OPEN_TYPE + _MDI_DEVICE_TYPE + _MDI_CLOSE_TYPE));
-                        unique_trade[word] = 1;
-                        if(suggestions.length>=MAX_AUTOCOMPLETE_LIST) return suggestions;
-                    }
-                }
-            }
-        }
-        if (obj.incident.company_name) {
-            for (var j = 0; j < obj.incident.company_name.length; j++) {
-                var word=obj.incident.company_name[j];
-                if(word.toLowerCase().indexOf(term) > -1){
-                    if(!unique_company.hasOwnProperty(word)){
-                        suggestions.push((word+ " " + _MDI_OPEN_TYPE + _MDI_COMPANY_TYPE + _MDI_CLOSE_TYPE));
-                        unique_company[word] = 1;
-                        if(suggestions.length>=MAX_AUTOCOMPLETE_LIST) return suggestions;
-                    }
-                }
-            }
-        }
-            var   inc_type = obj.incident.incident_type_e;
-           if (document.documentElement.lang == "fr") {
-               inc_type = obj.incident.incident_type_f;
-           }
-        if(!unique_type.hasOwnProperty(inc_type)){
-            suggestions.push((inc_type+ " " + _MDI_OPEN_TYPE + _MDI_REPORT_TYPE + _MDI_CLOSE_TYPE));
-            unique_type[inc_type] = 1;
-            if(suggestions.length>=MAX_AUTOCOMPLETE_LIST) return suggestions;
-        }
-
-        /*var inc_company = "";
-        if (obj.incident.company_name) {
-            for (var i = 0; i < obj.incident.company_name.length; i++) {
-                inc_company += obj.incident.company_name[i] + "|";
-            }
-        }*/
-
+    var type_query = "incident-%3E%3Eincident_type_e.plfts.";
+    if (document.documentElement.lang === "fr") {
+        type_query = "incident-%3E%3Eincident_type_f.plfts.";
     }
-    return suggestions;
+    return AUTOCOMPLETE_URL + "?or=(or(incident-%3E%3Ecompany_name.plfts." + term + ",incident-%3E%3Etrade_name.plfts." + term + ")," + type_query + term + ")" + "&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
+
 }
 
 /**
- function unique(arr) {
-    var u = {}, a = [];
-    for(var i = 0, l = arr.length; i < l; ++i){
-        if(!u.hasOwnProperty(arr[i])) {
-            a.push(arr[i]);
-            u[arr[i]] = 1;
-        }
-    }
-    return a;
-}
- */
-
-
-
-/***
- * Find the relavent terms TODO- doesn't work right
+ * After recieving the query, parse the terms and identify them to users
  * @param term
  * @param data
  * @returns {Array}
  */
 function processAutoCompleteTerms(term, data) {
     var suggestions = [];
-
+    var unique_company = {};
+    var unique_trade = {};
+    var unique_type = {};
     if (!term) return [];
-    processAutoCompleteTerms2(term,data);
-    var keywords = $.map(data, (obj) => {
-
-        var inc_type = ""
-        if (document.documentElement.lang == "fr") {
-            inc_type = obj.incident.incident_type_f;
-        } else {
-            inc_type = obj.incident.incident_type_e;
-        }
+    term=term.toLowerCase();
+    //TODO cleanup
+    for (var i = 0; i < data.length; i++) {
         var inc_trade = "";
+        var obj = data[i];
         if (obj.incident.trade_name) {
-            for (var i = 0; i < obj.incident.trade_name.length; i++) {
-                inc_trade += obj.incident.trade_name[i] + "|";
-            }
-        }
-        var inc_company = "";
-        if (obj.incident.company_name) {
-            for (var i = 0; i < obj.incident.company_name.length; i++) {
-                inc_company += obj.incident.company_name[i] + "|";
-            }
-        }
-        console.log(inc_trade)
-        if (inc_trade.length > 0) inc_trade = inc_trade.substr(0, inc_trade.length - 1);
-        return [inc_trade + " " + _MDI_OPEN_TYPE + _MDI_DEVICE_TYPE + _MDI_CLOSE_TYPE, inc_company +
-        " " + _MDI_OPEN_TYPE + _MDI_COMPANY_TYPE + _MDI_CLOSE_TYPE, inc_type + " " + _MDI_OPEN_TYPE + _MDI_REPORT_TYPE + _MDI_CLOSE_TYPE];
-    });
-    //TODO multiple trade names and companies
-    //console.log(keywords)
-
-    term = $.trim(term.toLowerCase());
-    keywords.forEach((keyword) => {
-        if (keyword.toLowerCase().indexOf(term) > -1) {
-            var typeIndex = keyword.lastIndexOf('[');
-            var type = keyword.substr(typeIndex, (keyword.length - typeIndex));
-            keyword = keyword.substring(0, typeIndex);
-            var pushKeyword = keyword.toLowerCase().split('|');
-            pushKeyword.forEach((word) => {
-                // _geKeyWordList(keyword.toLowerCase());
-                if ($.trim(word)) {
-                    if (!suggestions.includes(word + " " + type)) {
-                        suggestions.push(word + " " + type);
+            for (var j = 0; j < obj.incident.trade_name.length; j++) {
+                var word = obj.incident.trade_name[j];
+                if (word.toLowerCase().indexOf(term) > -1) {
+                    if (!unique_trade.hasOwnProperty(word)) {
+                        suggestions.push((word + " " + _MDI_OPEN_TYPE + _MDI_DEVICE_TYPE + _MDI_CLOSE_TYPE));
+                        unique_trade[word] = 1;
+                        if (suggestions.length >= MAX_AUTOCOMPLETE_LIST) return suggestions;
                     }
                 }
-            });
+            }
         }
-    });
-    //  console.log(suggestions);
+        if (obj.incident.company_name) {
+            for (var j = 0; j < obj.incident.company_name.length; j++) {
+                var word = obj.incident.company_name[j];
+                if (word.toLowerCase().indexOf(term) > -1) {
+                    if (!unique_company.hasOwnProperty(word)) {
+                        suggestions.push((word + " " + _MDI_OPEN_TYPE + _MDI_COMPANY_TYPE + _MDI_CLOSE_TYPE));
+                        unique_company[word] = 1;
+                        if (suggestions.length >= MAX_AUTOCOMPLETE_LIST) return suggestions;
+                    }
+                }
+            }
+        }
+        var inc_type = obj.incident.incident_type_e;
+        if (document.documentElement.lang == "fr") {
+            inc_type = obj.incident.incident_type_f;
+        }
+
+        if(inc_type.toLowerCase().indexOf(term) > -1) {
+            if (!unique_type.hasOwnProperty(inc_type)) {
+                suggestions.push((inc_type + " " + _MDI_OPEN_TYPE + _MDI_REPORT_TYPE + _MDI_CLOSE_TYPE));
+                unique_type[inc_type] = 1;
+                if (suggestions.length >= MAX_AUTOCOMPLETE_LIST) return suggestions;
+            }
+        }
+
+    }
     return suggestions;
 }
-
-function _getKeywordList(word) {
-    var result = [];
-    if (!word) return result;
-
-}
-
 
 /**
  * Gets the raw request and parses it. Used to pass to the results page
  */
-function passRequestToResults() {
+function passRequestToResults() { //TODO delete
 
     var queryString = $(SEARCH_BOX_ID).val();
     var results = "";
@@ -248,7 +167,7 @@ function autocompleteInit() {
                     dataType: "json",
                     cache: true,
                     success: function (data) {
-                        var dataList = processAutoCompleteTerms2(term, data);
+                        var dataList = processAutoCompleteTerms(term, data);
                         dataList.splice(MAX_AUTOCOMPLETE_LIST);
                         response(dataList);
                     }
@@ -268,18 +187,15 @@ function autocompleteInit() {
             },
             select: function (event, ui) {
                 var terms = split(this.value);
-
                 // remove the current input
                 terms.pop();
                 // add the selected item
-                console.log(terms)
                 //add the closing bracket back
                 for (var i = 0; i < terms.length; i++) {
                     terms[i] = terms[i] + "]";
                 }
                 terms.push(ui.item.value);
                 // add placeholder
-                //terms.push(" ");
                 terms.push(" ");
                 this.value = terms.join(" ");
                 return false;
@@ -299,7 +215,6 @@ function updateDateState() {
         $("#enddate").val(null);
     }
 }
-
 
 /**
  * Parses the query using lucene. Constructs the terms for the api TODO delete
@@ -336,7 +251,7 @@ function _parseQuery(query) {
         }
         ptr = ptr.right;
     }
-    console.log("Result pasre query " + result);
+
     return result;
 
 }
@@ -349,8 +264,7 @@ function _parseQuery(query) {
 function _getLuceneTerm(node) {
     var isField = false;
     var result = "";
-    console.log(node)
-    if (node.field !== LUCENE_IMPLICIT) {
+     if(node.field !== LUCENE_IMPLICIT){
         isField = true;
     }
     if (node.term) {
@@ -362,6 +276,6 @@ function _getLuceneTerm(node) {
     } else {
         //TODO basically no column identifier
     }
-    console.log("_getLuceneTerm " + result);
+
     return result;
 }
