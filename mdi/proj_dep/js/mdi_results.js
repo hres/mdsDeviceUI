@@ -144,7 +144,13 @@ function initTableWet() {
         },
         'bStateSave': true,
         'columns': [
-            {data: 'incident.incident_id'},
+            {data: 'incident.incident_id',
+                'render': function (data, type, full, meta) {
+                    //4.0.21 wet bug, with nu
+                    return ""+data+"";
+
+                }
+            },
             {
                 'data': 'incident.trade_name',
                 'render': function (data, type, full, meta) {
