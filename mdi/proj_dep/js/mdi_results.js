@@ -16,18 +16,15 @@ $('#linkExcel').on('click', function (event) {
  * @returns {string}
  */
 function getURL() {
-    var q = getQueryTermsFromUrl();
     var url = "";
     var term_query = "";
-    //_uiSetTermsDisplay(q);
-    if (q) {
-        term_query = _constructURLFromTerms(q);
-    } else {
-        //TODO any cleanup
-    }
-    //url="https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=eq.recall&limit=1300";//TODO Temp
-    url = API_URL + "?" + (term_query) + "&limit="+MAX_RESULTS;
+    var q = window.location.search.substr(3);
+    _uiSetTermsDisplay(decodeURIComponent(q));
 
+    if($.trim(q)) {
+        term_query = "search=plfts." + q + "&select=incident";
+    }
+    url = API_URL + "?" + (term_query);
     return url;
 }
 
@@ -38,39 +35,9 @@ function getURL() {
  */
 function _uiSetTermsDisplay(q) {
     if (!q) return;
-    $("termsTag").text(q.join(" "));
+    $(termsTag).text(q);
 }
 
-function getQueryTermsFromUrl() {
-    var q;
-    var queryObj = {};
-    var search = window.location.search.substr(1);
-    // search-decodeURIComponent(search);
-
-    var queries = search.split("&");
-    queries.forEach((query) => {
-
-        if (query.indexOf("=") > -1) {
-            var qc = query.split("=");
-            queryObj[qc[0]] = decodeURIComponent(qc[1]);
-        }
-    });
-    //queryObj=$.trim(queryObj);
-    if (queryObj.hasOwnProperty("q")) q = (queryObj.q).split("]");
-    //if (queryObj.hasOwnProperty("page") && !isNaN(queryObj.page)) page = parseInt(queryObj.page) - 1;
-    //remove brackets
-    if (!q) return "";
-    q = _collectTermTypes(q);
-    //TODO delete?
-    /* for(let i=0;i<q.length;i++){
-         let _q=q[i];
-         if (_q.indexOf("[") > -1 || _q.indexOf("]") > -1 ||q.length==0){
-             q.splice(q.indexOf(_q), 1);
-             i=i-1; //dont increment
-         }
-     }*/
-    return q;
-}
 
 /***
  * Categorizes the term types. Allows to construct query
@@ -80,7 +47,6 @@ function getQueryTermsFromUrl() {
  */
 function _collectTermTypes(termArray) {
     if (!termArray) return "";
-    console.log(termArray);
     var result = {};
     //TODO make into a map? or maps for each type
     result.company = [];
@@ -89,20 +55,18 @@ function _collectTermTypes(termArray) {
     result.none = [];
     for (var i = 0; i < termArray.length; i++) {
         var terms = (termArray[i]).split("[");
-        console.log(terms);
+
         if (terms && terms.length > 1) {
             var value = $.trim(terms[0]);
             switch ($.trim(terms[1])) {
                 case _MDI_DEVICE_TYPE:
-                    //console.log("device");
                     result.device.push(value);
                     break;
                 case _MDI_COMPANY_TYPE:
-                    //console.log("company");
+
                     result.company.push(value);
                     break;
                 case _MDI_REPORT_TYPE:
-                   // console.log("type");
                     result.type.push(value);
                     break;
                 default:
@@ -112,12 +76,9 @@ function _collectTermTypes(termArray) {
         } else {
             if (terms[0].length) {
                 result.none.push(terms[0]);
-                console.log( result.none)
-                //console.log("none")
             }
         }
     }
-    //console.log(result);
     return result;
 }
 
@@ -130,10 +91,10 @@ function initTableWet() {
     window['wb-tables'] = {
         "processing": true,
         "autoWidth": false,
-        "columnDefs": [
+       /* "columnDefs": [
             {"width": "10%", "targets": 7},
             {"width": "5%", "targets": 4}
-        ],
+        ],*/
         "ajax": {
             "url": getURL(),
             "dataSrc": '',
@@ -155,6 +116,13 @@ function initTableWet() {
                 'data': 'incident.trade_name',
                 'render': function (data, type, full, meta) {
                     return arrayNameDisplay(data);
+
+                }
+            },
+            {
+                'data': 'incident.device_desc_e',
+                'render': function (data, type, full, meta) {
+                    return deviceDescriptionDisplay(data,full);
 
                 }
             },
@@ -193,6 +161,14 @@ function initTableWet() {
                 }
             },
             {
+                'data': 'incident.problem_detail',
+                'render': function (data, type, full, meta) {
+                    return problemDetailCodeTypeDisplay(data, full);
+
+                }
+            },
+            //code_type_e
+            {
                 'data': 'incident.receipt_date',
                 'render': function (data, type, full, meta) {
                     return '<span>' + trimString(data) + "</span>";
@@ -202,6 +178,35 @@ function initTableWet() {
         ]
     }
 }
+function deviceDescriptionDisplay(data, full) {
+    var displayValue = "";
+
+    if (isFrench()) {
+        displayValue = full.incident.device_desc_f;//wrong is an arraywerwerwerw
+    } else {
+        displayValue = full.incident.device_desc_e;
+    }
+    return (trimString(displayValue));
+}
+
+
+
+function problemDetailCodeTypeDisplay(data,full){
+    var displayName = "";
+    var unique = {};
+            for (var i = 0; i < full.incident.problem_detail.length; i++) {
+                var code=full.incident.problem_detail[i].code_type_e;
+                if (isFrench()) code=full.incident.problem_detail[i].code_type_f;
+                if (!unique.hasOwnProperty(code)){
+                    displayName += code + "<br>";
+                    unique[code]=1;
+                }
+            }
+
+    displayName = displayName.substring(0, displayName.length - 4);
+    return ((displayName));
+}
+
 
 function isEnglish() {
     return document.documentElement.lang === "en"
@@ -289,19 +294,6 @@ function arrayNameDisplay(data) {
     return displayName;
 }
 
-
-/**
- {data: 'incident.receipt_date'}
- ,
- *
- * @constructor
- */
-
-function OnFail() {
-
-    console.warn("failed");
-}
-
 /**
  * Exports table data to a csv
  * @param $table
@@ -342,124 +334,3 @@ function ExportTableToCSV($table, filename) {
     }
 }
 
-/**
- * Creates the search query. Assumes this is an and situation
- * @param queryObj
- * @private
- */
-
-//TODO delete
-function _constructURLFromTerms2(queryObj) {
-    var q_company = "";
-    var q_device = "";
-    var q_type = "";
-    var q_none="";
-    var result = "";
-
-    if (!queryObj) return "";
-    //https://rest.hres.ca/mdi/mdi_search?incident-%3E%3Etrade_name=plfts.CEMENT&incident-%3E%3Ecompany_name=plfts.BIOMET&incident-%3E%3Eincident_type_e=plfts.Voluntary%20problem%20report&limit=20
-    if (queryObj.company.length === 1) {
-        q_company = "incident->>company_name=plfts." + encodeURIComponent(queryObj.company[0]);
-        result = q_company;
-    } else if (queryObj.company.length > 1) {
-        var base = ("incident->>company_name=and(");
-        for (var i = 0; i < queryObj.company.length; i++) {
-            var a_company = queryObj.company[i];
-            base = base + "plfts." + (a_company) + ",";
-        }
-        base = (base.substring(0, base.length - 1)) + ")";
-        q_company = base;
-         result=q_company; //TODO redundant
-    }
-    if (queryObj.device.length === 1) {
-        q_device = "incident->>trade_name=plfts." + encodeURIComponent(queryObj.device[0]);
-         result+=("&"+q_device);
-    }
-    if (queryObj.type.length === 1) {
-        q_type = "incident->>incident_type_e=plfts.";
-        if (isFrench()) {
-            q_type = "incident->>incident_type_f=plfts."
-        }
-        q_type += encodeURIComponent(queryObj.type[0]);
-         result+=("&"+q_type);
-    }
-    if(queryObj.none.length === 1){
-        //TODO this is problematic as searching on french and english
-        q_none="incident.incident_id_e=plfts.";
-        //https://rest.hres.ca/mdi/mdi_search?incident.incident_id=plfts.rest&limit=3000
-        q_none += encodeURIComponent(queryObj.non[0]);
-        result+=("&"+q_none);
-    }
-   /* var result_array = [];
-    if (q_company) result_array.push(q_company);
-    if (q_device) result_array.push(q_device);
-    if (q_type) result_array.push(q_type);
-    if (result_array.length == 1)
-        switch (result_array.length) {
-            case 0:
-                //TODO
-                break;
-            case 1:
-                result=result_array[0];
-                break;
-            case 2:
-                break;
-
-            case 3:
-                break;
-        }*/
-
-    if (result.indexOf("&") === 0) {
-        result = result.substring(1, result.length);
-    }
-    return result;
-}
-
-function _constructURLFromTerms(queryObj) {
-    var q_company = "";
-    var q_device = "";
-    var q_type = "";
-    var q_none = "";
-    var result = "";
-    console.log(queryObj)
-    if (!queryObj) return "";
-    //https://rest.hres.ca/mdi/mdi_search?incident-%3E%3Etrade_name=plfts.CEMENT&incident-%3E%3Ecompany_name=plfts.BIOMET&incident-%3E%3Eincident_type_e=plfts.Voluntary%20problem%20report&limit=20
-    if (queryObj.company.length === 1) {
-        q_company = "incident->>company_name=plfts." + encodeURIComponent(queryObj.company[0]);
-        result = q_company;
-    } else if (queryObj.company.length > 1) {
-        var base = ("incident->>company_name=and(");
-
-        for (var i = 0; i < queryObj.company.length; i++) {
-            var a_company = queryObj.company[i];
-            base = base + "plfts." + (a_company) + ",";
-        }
-        base = (base.substring(0, base.length - 1)) + ")";
-        q_company = base;
-        result = q_company; //TODO redundant
-    }
-    if (queryObj.device.length === 1) {
-        q_device = "incident->>trade_name=plfts." + encodeURIComponent(queryObj.device[0]);
-        result += ("&" + q_device);
-    }
-    if (queryObj.type.length === 1) {
-        q_type = "incident->>incident_type_e=plfts.";
-        if (isFrench()) {
-            q_type = "incident->>incident_type_f=plfts."
-        }
-        q_type += encodeURIComponent(queryObj.type[0]);
-        result += ("&" + q_type);
-    }
-    if(queryObj.none.length === 1){
-        //TODO this is problematic as searching on french and english
-        q_none="incident.incident_id=plfts.";
-        //https://rest.hres.ca/mdi/mdi_search?incident.incident_id=plfts.rest&limit=3000
-        q_none += encodeURIComponent(queryObj.none[0]);
-        result+=("&"+q_none);
-    }
-    //get rid of first ampersand
-    if (result.indexOf("&") === 0) {
-        result = result.substring(1, result.length);
-    }
-    return result;
-}
