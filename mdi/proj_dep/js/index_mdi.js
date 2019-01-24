@@ -9,8 +9,7 @@ const SEARCH_BOX_ID = "#search";
 ;
 
 //https://rest.hres.ca/mdi/mdi_search?select=incident.incident_id&search=fts.hip&limit=30
-$(document).ready(() => {
-
+$(document).ready(function(){
     autocompleteInit()
 });
 
