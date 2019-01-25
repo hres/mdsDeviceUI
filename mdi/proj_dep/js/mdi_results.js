@@ -24,7 +24,7 @@ function getURL() {
     if($.trim(q)) {
         term_query = "search=plfts." + q + "&select=incident";
     }
-    url = API_URL + "?" + (term_query);
+    url = API_URL + "?" + (term_query)+"&limit=10000";
     return url;
 }
 
