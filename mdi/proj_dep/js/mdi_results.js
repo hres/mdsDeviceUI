@@ -1,7 +1,7 @@
 const limit = 25;
 const termsTag = "#terms";
 const EMPTY_RESULT = ""; //in case need to add dash for empty cell (accessibility)
-const MAX_RESULTS=3000;
+const MAX_RESULTS=10000;
 $(document).ready(() => {
     initTableWet();
 });
@@ -20,11 +20,10 @@ function getURL() {
     var term_query = "";
     var q = window.location.search.substr(3);
     _uiSetTermsDisplay(decodeURIComponent(q));
-
     if($.trim(q)) {
         term_query = "search=plfts." + q + "&select=incident";
     }
-    url = API_URL + "?" + (term_query)+"&limit=10000";
+    url = API_URL + "?" + (term_query)+"&limit="+MAX_RESULTS;
     return url;
 }
 
@@ -91,10 +90,9 @@ function initTableWet() {
     window['wb-tables'] = {
         "processing": true,
         "autoWidth": false,
-       /* "columnDefs": [
-            {"width": "10%", "targets": 7},
-            {"width": "5%", "targets": 4}
-        ],*/
+        "columnDefs": [
+            {"width": "9%", "targets": 7}
+        ],
         "ajax": {
             "url": getURL(),
             "dataSrc": '',
@@ -139,7 +137,7 @@ function initTableWet() {
 
                 }
             },
-            {
+           /* {
                 'data': 'risk_classification',
                 'render': function (data, type, full, meta) {
 
@@ -152,7 +150,7 @@ function initTableWet() {
                     return incidentTypeDisplay(data, full);
 
                 }
-            },
+            },*/
             {
                 'data': 'incident.problem_detail',
                 'render': function (data, type, full, meta) {
@@ -229,6 +227,7 @@ function trimString(data) {
 
 }
 
+//TODO remove, no longer showing the colummn
 function riskNameDisplay(data, full) {
     //full.incident.device_detail
     //detail.risk_classification
@@ -256,6 +255,7 @@ function hazardDisplay(data, full) {
     return (trimString(displayValue));
 }
 
+//TO DO delete this as not uses
 function incidentTypeDisplay(data, full) {
     var displayValue = "";
     if (isFrench()) {

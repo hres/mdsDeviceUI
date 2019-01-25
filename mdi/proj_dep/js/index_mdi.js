@@ -35,6 +35,14 @@ function passRequestToResults() { //TODO delete
 }
 
 
+//TODO implement for disclaimer
+function getQuerySize(query){
+
+
+
+}
+
+
 
 /**
  * Manages the state of the search ui
