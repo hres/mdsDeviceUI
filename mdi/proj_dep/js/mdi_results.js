@@ -268,15 +268,24 @@ function incidentTypeDisplay(data, full) {
 
 function problemDetailDisplay(data, full) {
     var displayName = "";
+    var unique = {};
     if (!data || data.length == 0) return "";
     if (isFrench()) {
         for (var i = 0; i < data.length; i++) {
-            displayName += data[i].desc_f + "<br>"
+            var code=data[i].desc_f;
+            if (!unique.hasOwnProperty(code)){
+                displayName += code + "<br>";
+                unique[code]=1;
+            }
         }
     } else {
-        //todo fix
+        //todo fix replace with map?
         for (var i = 0; i < data.length; i++) {
-            displayName += data[i].desc_e + "<br>"
+            var code=data[i].desc_e;
+            if (!unique.hasOwnProperty(code)){
+                displayName += code + "<br>";
+                unique[code]=1;
+            }
         }
     }
     displayName = displayName.substring(0, displayName.length - 4);
