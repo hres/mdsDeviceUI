@@ -1,8 +1,9 @@
-const limit = 25;
-const termsTag = "#terms";
-const EMPTY_RESULT = ""; //in case need to add dash for empty cell (accessibility)
-const MAX_RESULTS=10000;
-$(document).ready(() => {
+var limit = 25;
+var termsTag = "#terms";
+var EMPTY_RESULT = ""; //in case need to add dash for empty cell (accessibility)
+var MAX_RESULTS=10000;
+
+$(document).ready(function() {
     initTableWet();
 });
 
@@ -21,9 +22,9 @@ function getURL() {
     var q = window.location.search.substr(3);
     _uiSetTermsDisplay(decodeURIComponent(q));
     if($.trim(q)) {
-        term_query = "search=plfts." + q + "&select=incident";
+        term_query = "search=plfts." + "%22"+ q  +"%22"+ "&select=incident";
     }
-    url = API_URL + "?" + (term_query)+"&limit="+MAX_RESULTS;
+    url = window.MDI.END_POINT + "?"+term_query+"&limit="+MAX_RESULTS;
     return url;
 }
 

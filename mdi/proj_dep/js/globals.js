@@ -1,19 +1,28 @@
-const API_URL = "https://rest.hres.ca/mdi/mdi_search";
-const SPACE_STRING = " ";
-var _MDI_DEVICE_TYPE="device";
-var _MDI_COMPANY_TYPE="company";
-var _MDI_REPORT_TYPE="type";
-var  _MDI_OPEN_TYPE="[";
-var _MDI_CLOSE_TYPE="]";
-var _MDI_RESULTS_PAGE_NAME = "results.html";
+
+/**
+ * Attach global variables to window. PLace in a single variable
+ */
+(function(window) {
+    var MDI={};
+    MDI.DEVICE_TYPE="device";
+    MDI.COMPANY_TYPE="company";
+    MDI.START_AUTO="[";
+    MDI.END_AUTO="]";
+    MDI.END_POINT="https://rest.hres.ca/mdi/mdi_search";
+    MDI.RESULTS_PAGE_NAME="results.html";
+    window.MDI=MDI;
+})(window);
 
 
-$(document).ready(() => {
+/**
+ * Update variables for french language
+ */
+$(document).ready(function() {
 
-    if (document.documentElement.lang == "fr"){
-        _MDI_DEVICE_TYPE="fr_device";
-        _MDI_COMPANY_TYPE="fr_company";
-        _MDI_REPORT_TYPE="fr_type";
-        _MDI_RESULTS_PAGE_NAME = "results_fr.html"
+    if (document && document.documentElement && document.documentElement.lang == "fr"){
+        window.MDI.DEVICE_TYPE="instrument";
+        window.MDI.COMPANY_TYPE="entreprise";
     }
 });
+
+
