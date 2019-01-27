@@ -1,10 +1,10 @@
 "use strict";
 
-var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no."];
-
+var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.","|",",","."];
+var illegal2=["&",","];
 var SEARCH_BOX_ID = "#search";
 var AUTOCOMPLETE_URL = window.MDI.END_POINT;
-var AUTOCOMPLETE_QUERY_LIMIT = 800;
+var AUTOCOMPLETE_QUERY_LIMIT = 600;
 var MAX_AUTOCOMPLETE_LIST = 8;
 
 
@@ -15,8 +15,9 @@ $(document).ready(function(){
 
 
 function split(val) {
-    //splitting on space
-    return val.split(/\s+/);
+    //splitting on space comma
+    //return val.split(/\s+,/);
+    return val.split('|');
 }
 
 function splitSpace(val) {
@@ -36,20 +37,31 @@ function passRequestToResults() { //TODO delete
 
     var queryString = $(SEARCH_BOX_ID).val();
     var results = "";
-    queryString = $.trim(queryString);
-        //window.location.href = resultPageURL + "?q=" + search.join("%20");
-        window.location.href = window.MDI.RESULTS_PAGE_NAME + "?q=" + encodeURI(queryString);
+    queryString = $.trim(queryString).split(" ");
+    for(var count=0;count<illegal.length;count++){
+        var illegal_index = $.inArray(illegal[count], queryString);
+        if (illegal_index  > -1){
+            queryString.splice(illegal_index , 1);
+            //reset term search, more than one
+            count=count-1;
+        }
+    }
+        window.location.href = window.MDI.RESULTS_PAGE_NAME + "?q=" + queryString.join("%20");
 }
 
 
+function removeIllegals(terms){
+    var search = terms.substr(0,1);
+    var i=$.inArray(search,illegal2);
+    if (i > -1)
+        console.log(terms.substr(1,terms.length-1));
+        return terms.substr(1,terms.length-1);
+    return terms;
+}
+
 function getTermQuery(term) {
-    term=$.trim(term);
-    var illegalIndex=term.indexOf("&");
-    if(illegalIndex===0){
-        term=term.substr(1,term.length-1);
-    }if(illegalIndex===term.length-1){
-        term=term.substr(0,term.length-2);
-    }
+
+    term=removeIllegals($.trim(term));
     if(term.indexOf(" ")===-1){
         //single term search
         return AUTOCOMPLETE_URL + "?or=(incident-%3E%3Ecompany_name.ilike.*" + term + "*,incident-%3E%3Etrade_name.ilike.*"  + term + "*)" + "&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
@@ -63,12 +75,12 @@ function getTermQuery(term) {
  * @param data
  * @returns {Array}
  */
-function processAutoCompleteTerms(term, data) {
+function processAutoCompleteTerms(query, data) {
     var suggestions = [];
     var unique_company = {};
     var unique_trade = {};
-    if (!term) return [];
-    term=term.toLowerCase();
+    if (!query) return [];
+    var term=query.toLowerCase();
 
     //TODO cleanup nested map object maybe?
     for (var i = 0; i < data.length; i++) {
@@ -99,6 +111,7 @@ function processAutoCompleteTerms(term, data) {
             }
         }
     }
+    console.log(suggestions);
     return suggestions;
 }
 
@@ -122,6 +135,7 @@ function autocompleteInit() {
                 var term = $.trim(request.term);
                 if (term) {
                     term = extractLast(request.term)
+                    //term=removeIllegals(term);
                 }
                 $.ajax({
                     url: getTermQuery(term),
@@ -148,12 +162,12 @@ function autocompleteInit() {
                 terms.pop();
                 // add the selected item
                 for (var i = 0; i < terms.length; i++) {
-                    terms[i] = terms[i];
+                    terms[i] = $.trim(terms[i])+" | ";
                 }
                 terms.push(_trimAutocompleteType(ui.item.value));
                 // add placeholder
-                //terms.push("");
-                this.value = terms.join(" ");
+                terms.push("| ");
+                this.value = terms.join("");
                 return false;
             }
         });
@@ -168,5 +182,4 @@ function _trimAutocompleteType(value){
         return (value.substring(0,location));
     }
     return value;
-
 }
