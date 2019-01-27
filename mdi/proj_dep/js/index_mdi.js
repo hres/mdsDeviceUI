@@ -32,16 +32,7 @@ function passRequestToResults() { //TODO delete
 
     var queryString = $(SEARCH_BOX_ID).val();
     var results = "";
-    queryString = $.trim(queryString).split(" ");
-    for(var count=0;count<illegal.length;count++){
-        var illegal_index = $.inArray(illegal[count], queryString);
-        if (illegal_index  > -1){
-            queryString.splice(illegal_index , 1);
-            //reset term search, more than one
-            count=count-1;
-        }
-    }
-        window.location.href = window.MDI.RESULTS_PAGE_NAME + "?q=" + queryString.join("%20");
+    window.location.href = window.MDI.RESULTS_PAGE_NAME + "?q=" + encodeURIComponent(queryString);
 }
 
 
@@ -83,8 +74,8 @@ function processAutoCompleteTerms(query, data) {
         var obj = data[i];
         if (obj.incident.trade_name) {
             for (var j = 0; j < obj.incident.trade_name.length; j++) {
-                var word = obj.incident.trade_name[j].toLowerCase();
-                if (word.indexOf(term) > -1) {
+                var word = obj.incident.trade_name[j];
+                if (word.toLowerCase().indexOf(term) > -1) {
                     if (!unique_trade.hasOwnProperty(word)) {
                         suggestions.push((word + " " + window.MDI.START_AUTO +window.MDI.DEVICE_TYPE +window.MDI.END_AUTO));
                         unique_trade[word] = 1;

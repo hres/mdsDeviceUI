@@ -2,6 +2,7 @@ var limit = 25;
 var termsTag = "#terms";
 var EMPTY_RESULT = ""; //in case need to add dash for empty cell (accessibility)
 var MAX_RESULTS=10000;
+var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.","|",",","."];
 
 $(document).ready(function() {
     initTableWet();
@@ -21,8 +22,21 @@ function getURL() {
     var term_query = "";
     var q = window.location.search.substr(3);
     _uiSetTermsDisplay(decodeURIComponent(q));
-    if($.trim(q)) {
-        term_query = "search=plfts." + "%22"+ q  +"%22"+ "&select=incident";
+    q=q.split(" ");
+    for(var count=0;count<illegal.length;count++){
+        var illegal_index = $.inArray(illegal[count], q);
+        if (illegal_index  > -1){
+            q.splice(illegal_index , 1);
+            //reset term search, more than one
+            count=count-1;
+        }
+    }
+    q=q.join("%20");
+    console.log(q);
+    if(q) {
+        term_query = "search=plfts." + "%22"+ q  +"%22"+ "&select=incident&order=incident_id.desc";
+    }else{
+        term_query="select=incident&order=incident_id.desc";
     }
     url = window.MDI.END_POINT + "?"+term_query+"&limit="+MAX_RESULTS;
     return url;
