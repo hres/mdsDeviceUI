@@ -6,24 +6,19 @@ var SEARCH_BOX_ID = "#search";
 var AUTOCOMPLETE_URL = window.MDI.END_POINT;
 var AUTOCOMPLETE_QUERY_LIMIT = 600;
 var MAX_AUTOCOMPLETE_LIST = 8;
-
+var DELIMITER=",";
 
 $(document).ready(function(){
     autocompleteInit()
 });
 
 
-
 function split(val) {
-    //splitting on space comma
+    //splitting on space
     //return val.split(/\s+,/);
-    return val.split('|');
+    return val.split(DELIMITER);
 }
 
-function splitSpace(val) {
-    //splitting on space
-    return val.split(/\s+/);
-}
 
 function extractLast(term) {
     var temp = split(term).pop();
@@ -61,7 +56,7 @@ function removeIllegals(terms){
 
 function getTermQuery(term) {
 
-    term=removeIllegals($.trim(term));
+    //term=removeIllegals($.trim(term));
     if(term.indexOf(" ")===-1){
         //single term search
         return AUTOCOMPLETE_URL + "?or=(incident-%3E%3Ecompany_name.ilike.*" + term + "*,incident-%3E%3Etrade_name.ilike.*"  + term + "*)" + "&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
@@ -111,7 +106,6 @@ function processAutoCompleteTerms(query, data) {
             }
         }
     }
-    console.log(suggestions);
     return suggestions;
 }
 
@@ -135,7 +129,7 @@ function autocompleteInit() {
                 var term = $.trim(request.term);
                 if (term) {
                     term = extractLast(request.term)
-                    //term=removeIllegals(term);
+                    term=removeIllegals(term);
                 }
                 $.ajax({
                     url: getTermQuery(term),
@@ -162,11 +156,11 @@ function autocompleteInit() {
                 terms.pop();
                 // add the selected item
                 for (var i = 0; i < terms.length; i++) {
-                    terms[i] = $.trim(terms[i])+" | ";
+                    terms[i] = $.trim(terms[i])+" "+DELIMITER+" ";
                 }
                 terms.push(_trimAutocompleteType(ui.item.value));
                 // add placeholder
-                terms.push("| ");
+                terms.push(DELIMITER+" ");
                 this.value = terms.join("");
                 return false;
             }
