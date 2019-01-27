@@ -44,7 +44,14 @@ function passRequestToResults() { //TODO delete
 
 function getTermQuery(term) {
     term=$.trim(term);
+    var illegalIndex=term.indexOf("&");
+    if(illegalIndex===0){
+        term=term.substr(1,term.length-1);
+    }if(illegalIndex===term.length-1){
+        term=term.substr(0,term.length-2);
+    }
     if(term.indexOf(" ")===-1){
+        //single term search
         return AUTOCOMPLETE_URL + "?or=(incident-%3E%3Ecompany_name.ilike.*" + term + "*,incident-%3E%3Etrade_name.ilike.*"  + term + "*)" + "&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
     }
     return AUTOCOMPLETE_URL + "?or=(incident-%3E%3Ecompany_name.plfts." + term + ",incident-%3E%3Etrade_name.plfts." + term + ")" + "&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
