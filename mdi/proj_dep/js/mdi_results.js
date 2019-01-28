@@ -151,20 +151,6 @@ function initTableWet() {
 
                 }
             },
-           /* {
-                'data': 'risk_classification',
-                'render': function (data, type, full, meta) {
-
-                    return riskNameDisplay(data, full);
-                }
-            },
-            {
-                'data': 'incident_type_e',
-                'render': function (data, type, full, meta) {
-                    return incidentTypeDisplay(data, full);
-
-                }
-            },*/
             {
                 'data': 'incident.problem_detail',
                 'render': function (data, type, full, meta) {
@@ -179,7 +165,6 @@ function initTableWet() {
 
                 }
             },
-            //code_type_e
             {
                 'data': 'incident.receipt_date',
                 'render': function (data, type, full, meta) {
