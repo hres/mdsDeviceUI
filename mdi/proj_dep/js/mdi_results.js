@@ -21,6 +21,7 @@ function getURL() {
     var url = "";
     var term_query = "";
     var q = window.location.search.substr(3);
+    q=_checkForLang(q);
     _uiSetTermsDisplay(decodeURIComponent(q));
     q=q.split(" ");
     for(var count=0;count<illegal.length;count++){
@@ -39,6 +40,22 @@ function getURL() {
     }
     url = window.MDI.END_POINT + "?"+term_query+"&limit="+MAX_RESULTS;
     return url;
+}
+
+/**
+ * Checks for the addition of the language tag
+ * @param query -string to process
+ * @returns {string}
+ * @private
+ */
+function _checkForLang(query){
+    if(!query) return query;
+    var index=query.lastIndexOf("&");
+    var testString=query.substring(index,query.length-1);
+    if(testString.indexOf("lang")>-1){
+        return query.substring(0,index);
+    }
+    return query;
 }
 
 /**
