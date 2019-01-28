@@ -1,8 +1,4 @@
-var limit = 25;
-var termsTag = "#terms";
-var EMPTY_RESULT = ""; //in case need to add dash for empty cell (accessibility)
-var MAX_RESULTS=10000;
-var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.","|",",","."];
+var _MDI=window.MDI;
 
 $(document).ready(function() {
     initTableWet();
@@ -20,6 +16,7 @@ $('#linkExcel').on('click', function (event) {
 function getURL() {
     var url = "";
     var term_query = "";
+    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.","|",",","."];
     var q = window.location.search.substr(3);
     q=_checkForLang(q);
     _uiSetTermsDisplay(decodeURIComponent(q));
@@ -38,7 +35,7 @@ function getURL() {
     }else{
         term_query="select=incident&order=incident_id.desc";
     }
-    url = window.MDI.END_POINT + "?"+term_query+"&limit="+MAX_RESULTS;
+    url = _MDI.END_POINT + "?"+term_query+"&limit="+_MDI.MAX_RESULTS;
     return url;
 }
 
@@ -65,57 +62,9 @@ function _checkForLang(query){
  */
 function _uiSetTermsDisplay(q) {
     if (!q) return;
-    $(termsTag).text(q);
+    $("#"+_MDI.TERMS_TAG).text(q);
 }
 
-
-/***
- * Categorizes the term types. Allows to construct query
- * @param termArray
- * @returns {string}
- * @private
- */
-function _collectTermTypes(termArray) {
-    if (!termArray) return "";
-    var result = {};
-    //TODO make into a map? or maps for each type
-    result.company = [];
-    result.type = [];
-    result.device = [];
-    result.none = [];
-    for (var i = 0; i < termArray.length; i++) {
-        var terms = (termArray[i]).split("[");
-
-        if (terms && terms.length > 1) {
-            var value = $.trim(terms[0]);
-            switch ($.trim(terms[1])) {
-                case _MDI_DEVICE_TYPE:
-                    result.device.push(value);
-                    break;
-                case _MDI_COMPANY_TYPE:
-
-                    result.company.push(value);
-                    break;
-                case _MDI_REPORT_TYPE:
-                    result.type.push(value);
-                    break;
-                default:
-                   result.none.push(value);
-                    break;
-            }
-        } else {
-            if (terms[0].length) {
-                result.none.push(terms[0]);
-            }
-        }
-    }
-    return result;
-}
-
-/**
- * "columnDefs": [
- { "width": "5%"},{ "width": "15%"},{ "width": "15%"},{ "width": "15%"},{ "width": "5%"},{ "width": "10%"},{ "width": "10%"},{ "width": "25%"}],
- */
 function initTableWet() {
     //TODO update initialization?
     window['wb-tables'] = {
@@ -185,7 +134,7 @@ function initTableWet() {
             {
                 'data': 'incident.receipt_date',
                 'render': function (data, type, full, meta) {
-                    return '<span>' + trimString(data) + "</span>";
+                    return '<span>' + $.trim(data) + "</span>";
 
                 }
             }
@@ -194,13 +143,12 @@ function initTableWet() {
 }
 function deviceDescriptionDisplay(data, full) {
     var displayValue = "";
-
     if (isFrench()) {
-        displayValue = full.incident.device_desc_f;//wrong is an arraywerwerwerw
+        displayValue = full.incident.device_desc_f;
     } else {
         displayValue = full.incident.device_desc_e;
     }
-    return (trimString(displayValue));
+    return ($.trim(displayValue));
 }
 
 
@@ -216,7 +164,6 @@ function problemDetailCodeTypeDisplay(data,full){
                     unique[code]=1;
                 }
             }
-
     displayName = displayName.substring(0, displayName.length - 4);
     return ((displayName));
 }
@@ -230,36 +177,7 @@ function isFrench() {
     return !isEnglish();
 }
 
-/**
- * If data is empty ensures it is replaced with an empty string
- * @param data
- * @returns {*}
- */
-function trimString(data) {
-    if (!data) return EMPTY_RESULT;
-    var result = $.trim(data);
-    if (!result) result = "-";
-    return result
 
-}
-
-//TODO remove, no longer showing the colummn
-function riskNameDisplay(data, full) {
-    //full.incident.device_detail
-    //detail.risk_classification
-    if (!full.incident || !full.incident.device_detail) {
-        return EMPTY_RESULT;
-    }
-    var displayName = "";
-    var devices = full.incident.device_detail;
-
-    for (var i = 0; i < devices.length; i++) {
-        displayName += devices[i].risk_classification + "<br>"
-    }
-    displayName = displayName.substring(0, displayName.length - 4);
-
-    return displayName;
-}
 
 function hazardDisplay(data, full) {
     var displayValue = "";
@@ -268,27 +186,18 @@ function hazardDisplay(data, full) {
     } else {
         displayValue = full.incident.hazard_severity_code_e;
     }
-    return (trimString(displayValue));
+    return ($.trim(displayValue));
 }
 
-//TO DO delete this as not uses
-function incidentTypeDisplay(data, full) {
-    var displayValue = "";
-    if (isFrench()) {
-        displayValue = full.incident.incident_type_f;
-    } else {
-        displayValue = full.incident.incident_type_e;
-    }
-    return (trimString(displayValue));
-}
 
 function problemDetailDisplay(data, full) {
     var displayName = "";
     var unique = {};
-    if (!data || data.length == 0) return "";
+    var code="";
+    if (!data || data.length === 0) return "";
     if (isFrench()) {
         for (var i = 0; i < data.length; i++) {
-            var code=data[i].desc_f;
+            code=data[i].desc_f;
             if (!unique.hasOwnProperty(code)){
                 displayName += code + "<br>";
                 unique[code]=1;
@@ -296,8 +205,8 @@ function problemDetailDisplay(data, full) {
         }
     } else {
         //todo fix replace with map?
-        for (var i = 0; i < data.length; i++) {
-            var code=data[i].desc_e;
+        for (var j = 0; j < data.length; j++) {
+            code=data[j].desc_e;
             if (!unique.hasOwnProperty(code)){
                 displayName += code + "<br>";
                 unique[code]=1;
@@ -305,13 +214,13 @@ function problemDetailDisplay(data, full) {
         }
     }
     displayName = displayName.substring(0, displayName.length - 4);
-    return (trimString(displayName));
+    return ($.trim(displayName));
 }
 
 function arrayNameDisplay(data) {
     var displayName = "";
-    if (!data) return EMPTY_RESULT;
-    if (!Array.isArray(data)) return $.trim(data)
+    if (!data) return "";
+    if (!Array.isArray(data)) return $.trim(data);
     for (var i = 0; i < data.length; i++) {
         displayName += data[i] + "<br>"
     }
