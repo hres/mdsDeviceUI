@@ -32,7 +32,6 @@ function getURL() {
         }
     }
     q=q.join("%20");
-    console.log(q);
     if(q) {
         term_query = "search=plfts." + "%22"+ q  +"%22"+ "&select=incident&order=incident_id.desc";
     }else{

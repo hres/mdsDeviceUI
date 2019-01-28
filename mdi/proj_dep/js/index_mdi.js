@@ -36,18 +36,16 @@ function passRequestToResults() { //TODO delete
 }
 
 
-function removeIllegals(terms){
+function removeLeadingIllegal(terms){
     var search = terms.substr(0,1);
     var i=$.inArray(search,illegal2);
-    if (i > -1)
-        console.log(terms.substr(1,terms.length-1));
-        return terms.substr(1,terms.length-1);
+    if (i >-1) {
+        return terms.substr(1, terms.length - 1);
+    }
     return terms;
 }
 
 function getTermQuery(term) {
-
-    //term=removeIllegals($.trim(term));
     if(term.indexOf(" ")===-1){
         //single term search
         return AUTOCOMPLETE_URL + "?or=(incident-%3E%3Ecompany_name.ilike.*" + term + "*,incident-%3E%3Etrade_name.ilike.*"  + term + "*)" + "&limit=" + AUTOCOMPLETE_QUERY_LIMIT;
@@ -110,8 +108,6 @@ function autocompleteInit() {
             if (event.keyCode === $.ui.keyCode.TAB &&
                 $(this).autocomplete("instance").menu.active) {
                 event.preventDefault();
-            } else if (event.keyCode === $.ui.keyCode.SPACE) {
-                $(".ui-menu-item").hide();
             }
         })
         .autocomplete({
@@ -120,7 +116,7 @@ function autocompleteInit() {
                 var term = $.trim(request.term);
                 if (term) {
                     term = extractLast(request.term)
-                    term=removeIllegals(term);
+                    term=removeLeadingIllegal(term);
                 }
                 $.ajax({
                     url: getTermQuery(term),
