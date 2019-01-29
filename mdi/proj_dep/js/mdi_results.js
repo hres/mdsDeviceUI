@@ -1,16 +1,19 @@
 var _MDI=window.MDI;
-
+//TODO clean up table initialization do it manually?
 $(document).ready(function() {
+    //set attribute dynamically for language
+    $("#results-table").attr("data-wb-tables",_MDI.RESULTS_TABLE);
     initTableWet();
 });
 
 // This must be a hyperlink
 $('#linkExcel').on('click', function (event) {
-    ExportTableToCSV.apply(this, [$('#results-table'), 'mdi_result.csv']);
+    ExportTableToCSV.apply(this, [$('#results-table'), 'mdi_imm.csv']);
 });
 
 /**
  * Creates the url for the search functionality
+ * Remove characters that interfere with search success
  * @returns {string}
  */
 function getURL() {
@@ -18,18 +21,19 @@ function getURL() {
     var term_query = "";
     var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.","|",",","."];
     var q = window.location.search.substr(3);
+    var terms;
     q=_checkForLang(q);
     _uiSetTermsDisplay(decodeURIComponent(q));
-    q=q.split(" ");
+    terms=q.split(" ");
     for(var count=0;count<illegal.length;count++){
-        var illegal_index = $.inArray(illegal[count], q);
+        var illegal_index = $.inArray(illegal[count], terms);
         if (illegal_index  > -1){
-            q.splice(illegal_index , 1);
+            terms.splice(illegal_index , 1);
             //reset term search, more than one
             count=count-1;
         }
     }
-    q=q.join("%20");
+    q=terms.join("%20");
     if(q) {
         term_query = "search=plfts." + "%22"+ q  +"%22"+ "&select=incident&order=incident_id.desc";
     }else{
@@ -68,6 +72,7 @@ function _uiSetTermsDisplay(q) {
 function initTableWet() {
     //TODO update initialization?
     window['wb-tables'] = {
+        "destroy": true,
         "processing": true,
         "autoWidth": false,
         "columnDefs": [
@@ -78,10 +83,10 @@ function initTableWet() {
             "dataSrc": '',
 
             "searching": false,
-            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, 'All']],
             "cache": true
         },
-        'bStateSave': true,
+        'bStateSave': false,
+        "order": [[ 0, "desc" ]],
         'columns': [
             {data: 'incident.incident_id',
                 'render': function (data, type, full, meta) {
@@ -141,6 +146,13 @@ function initTableWet() {
         ]
     }
 }
+
+/**
+ * For the Device type, display lang specific data
+ * @param data- the field/column triggered in the tale def
+ * @param full- the entire incident record
+ * @returns {string}
+ */
 function deviceDescriptionDisplay(data, full) {
     var displayValue = "";
     if (isFrench()) {
@@ -189,49 +201,54 @@ function hazardDisplay(data, full) {
     return ($.trim(displayValue));
 }
 
-
+/**
+ * Displays the data for code type column
+ * Concatenates the multiple lang specific terms
+ * @param data -the triggered data column
+ * @param full- the full incident json
+ * @returns {string}
+ */
 function problemDetailDisplay(data, full) {
     var displayName = "";
     var unique = {};
     var code="";
     if (!data || data.length === 0) return "";
-    if (isFrench()) {
-        for (var i = 0; i < data.length; i++) {
-            code=data[i].desc_f;
-            if (!unique.hasOwnProperty(code)){
-                displayName += code + "<br>";
-                unique[code]=1;
-            }
-        }
-    } else {
-        //todo fix replace with map?
-        for (var j = 0; j < data.length; j++) {
-            code=data[j].desc_e;
-            if (!unique.hasOwnProperty(code)){
-                displayName += code + "<br>";
-                unique[code]=1;
-            }
+    var tag="desc_e";
+    if(isFrench()){
+        tag="desc_f"
+    }
+    for (var i = 0; i < data.length; i++) {
+        code=data[i][tag];
+        if (!unique.hasOwnProperty(code)){
+            displayName += code + "<br>";
+            unique[code]=1;
         }
     }
     displayName = displayName.substring(0, displayName.length - 4);
     return ($.trim(displayName));
 }
 
+/**
+ * Concats array data for dsiplay. Each on new line
+ * @param data- array to process
+ * @returns {string}
+ */
 function arrayNameDisplay(data) {
     var displayName = "";
     if (!data) return "";
     if (!Array.isArray(data)) return $.trim(data);
     for (var i = 0; i < data.length; i++) {
-        displayName += data[i] + "<br>"
+        displayName += data[i] +" "+ "<br>";
+        //TODO relying on the space for csv download
     }
     displayName = displayName.substring(0, displayName.length - 4);
     return displayName;
 }
 
 /**
- * Exports table data to a csv
- * @param $table
- * @param filename
+ * Exports table data to a csv- function take from review Desicions
+ * @param $table -the table to process
+ * @param filename -file
  * @constructor
  */
 function ExportTableToCSV($table, filename) {

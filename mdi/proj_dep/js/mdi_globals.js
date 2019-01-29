@@ -22,6 +22,7 @@
     MDI.ZIP_TAG="full-extract-link";
     MDI.TERMS_TAG="terms";
     MDI.MAX_RESULTS=10000;
+    MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"All"]]}';
 
     window.MDI=MDI;
 })(window);
@@ -35,6 +36,7 @@ $(document).ready(function() {
     if (document && document.documentElement && document.documentElement.lang === "fr"){
         window.MDI.DEVICE_TYPE="dispositif";
         window.MDI.COMPANY_TYPE="entreprise";
+        MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"Tout"]]}';
     }
 });
 
