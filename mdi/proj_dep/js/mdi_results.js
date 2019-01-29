@@ -1,9 +1,27 @@
 var _MDI=window.MDI;
 //TODO clean up table initialization do it manually?
+//add results table tag to global?
 $(document).ready(function() {
     //set attribute dynamically for language
     $("#results-table").attr("data-wb-tables",_MDI.RESULTS_TABLE);
     initTableWet();
+
+});
+
+/**
+ * Fires when datatable is ready. Using to get record count
+ */
+$( document ).on( "wb-ready.wb-tables", ".wb-tables", function( event ) {
+    var table = $('#results-table').DataTable();
+    var recordCount=table.data().count();
+    if(recordCount>=_MDI.MAX_RESULTS){
+        $("#big-search").attr("aria-live","polite");
+        $("#big-search").removeClass("hidden")
+    }else{
+        //hide warning
+        $("#big-search").addClass("hidden");
+        $("#big-search").attr("aria-live","off");
+    }
 });
 
 // This must be a hyperlink
@@ -66,7 +84,7 @@ function _checkForLang(query){
  */
 function _uiSetTermsDisplay(q) {
     if (!q) return;
-    $("#"+_MDI.TERMS_TAG).text(q);
+    $("#"+_MDI.TERMS_TAG).text(" "+q);
 }
 
 function initTableWet() {
@@ -81,7 +99,6 @@ function initTableWet() {
         "ajax": {
             "url": getURL(),
             "dataSrc": '',
-
             "searching": false,
             "cache": true
         },
