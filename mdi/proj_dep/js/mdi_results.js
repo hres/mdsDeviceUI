@@ -11,7 +11,7 @@ $(document).ready(function() {
  * Fires when datatable is ready. Using to get record count
  */
 
-$(".wb-tables" ).on( "wb-ready.wb-tables", function( event ) {
+$("#results-table" ).on( "wb-ready.wb-tables", function( event ) {
     var table = $('#results-table').DataTable();
     var recordCount=table.data().count();
     if(recordCount>=_MDI.MAX_RESULTS){

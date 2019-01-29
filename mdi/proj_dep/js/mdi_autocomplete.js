@@ -20,10 +20,11 @@ function autocompleteInit() {
             }
             if (event.keyCode === 13) {
                 var curr = $(".selector").val();
-                if (!curr) return;
-                if ($(".selector").val().length == 0) {
-                    event.preventDefault();
-                    return false;
+                if (!curr) {
+                    return true;
+                }else if(curr.length===0) {
+                    //never happens
+                    return true;
                 }
             }
         })
