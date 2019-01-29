@@ -7,11 +7,11 @@ $(document).ready(function() {
     initTableWet();
 
 });
-
 /**
  * Fires when datatable is ready. Using to get record count
  */
-$( document ).on( "wb-ready.wb-tables", ".wb-tables", function( event ) {
+
+$(".wb-tables" ).on( "wb-ready.wb-tables", function( event ) {
     var table = $('#results-table').DataTable();
     var recordCount=table.data().count();
     if(recordCount>=_MDI.MAX_RESULTS){
