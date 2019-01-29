@@ -13,7 +13,10 @@ $(document).ready(function() {
 
 $("#results-table" ).on( "wb-ready.wb-tables", function( event ) {
     var table = $('#results-table').DataTable();
-    var recordCount=table.data().count();
+    var recordCount=0;
+    if(table.data()) {
+        recordCount = table.data().length;
+    }
     if(recordCount>=_MDI.MAX_RESULTS){
         $("#big-search").attr("aria-live","polite");
         $("#big-search").removeClass("hidden")
