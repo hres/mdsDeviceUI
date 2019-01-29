@@ -23,7 +23,8 @@
     MDI.TERMS_TAG="terms";
     MDI.MAX_RESULTS=10000;
     MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"All"]]}';
-
+    MDI.MDALL_FR='https://health-products.canada.ca/mdall-limh/switchlocale.do?lang=fr';
+    MDI.MDALL_EN='https://health-products.canada.ca/mdall-limh/';
     window.MDI=MDI;
 })(window);
 
