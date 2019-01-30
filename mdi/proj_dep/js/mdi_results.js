@@ -1,31 +1,49 @@
-var _MDI=window.MDI;
+var _MDI = window.MDI;
 //TODO clean up table initialization do it manually?
 //add results table tag to global?
-$(document).ready(function() {
+$(document).ready(function () {
     //set attribute dynamically for language
-    $("#results-table").attr("data-wb-tables",_MDI.RESULTS_TABLE);
+    _setTotalCount();
+    $("#results-table").attr("data-wb-tables", _MDI.RESULTS_TABLE);
     initTableWet();
 
 });
+
 /**
- * Fires when datatable is ready. Using to get record count
+ * Gets the count from the header using a separate query to get total
  */
 
-$("#results-table" ).on( "wb-ready.wb-tables", function( event ) {
-    var table = $('#results-table').DataTable();
-    var recordCount=0;
-    if(table.data()) {
-        recordCount = table.data().length;
-    }
-    if(recordCount>=_MDI.MAX_RESULTS){
-        $("#big-search").attr("aria-live","polite");
-        $("#big-search").removeClass("hidden")
-    }else{
-        //hide warning
-        $("#big-search").addClass("hidden");
-        $("#big-search").attr("aria-live","off");
-    }
-});
+function _setTotalCount() {
+    var url = createURLNoLimit() + "&limit=2";
+    var searchCLassID = "#big-search";
+    $.ajax({
+        url: url,
+        method: "GET",
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader('Range-Unit', 'items');
+            xhr.setRequestHeader('Range', '0-0');
+            xhr.setRequestHeader('Prefer', 'count=exact');
+        },
+        success: function(data, status, xhr){
+            var content = xhr.getResponseHeader('Content-Range');
+            var total = (content.split("/"))[1];
+            var totalobj=$(searchCLassID);
+            if (total==="*") {
+                totalobj.attr("aria-live", "polite").removeClass("hidden")
+            } else if (total > _MDI.MAX_RESULTS) {
+                var countObj=$("#search-count-msg");
+                var baseText = countObj.text();
+                countObj.text(baseText + " (" + total + " total)");
+                totalobj.attr("aria-live", "polite").removeClass("hidden")
+            } else {
+                totalobj.addClass("hidden").attr("aria-live", "off");
+            }
+        },
+        error: function(err) {
+            searchCLassID.addClass("hidden").attr("aria-live", "off");
+        }
+    });
+}
 
 // This must be a hyperlink
 $('#linkExcel').on('click', function (event) {
@@ -38,31 +56,48 @@ $('#linkExcel').on('click', function (event) {
  * @returns {string}
  */
 function getURL() {
-    var url = "";
+    return createURLNoLimit() + "&limit=" + _MDI.MAX_RESULTS;
+}
+
+/**
+ * Creates the url without any limits
+ * @returns {string}
+ */
+function createURLNoLimit() {
+
+    return _MDI.END_POINT + "?" + _createTermQuery();
+}
+
+/**
+ * Creates the term query to inject into an ajax requist
+ * @returns {string}
+ * @private
+ */
+function _createTermQuery() {
     var term_query = "";
-    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.","|",",","."];
+    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.", "|", ",", "."];
     var q = window.location.search.substr(3);
     var terms;
-    q=_checkForLang(q);
+    q = _checkForLang(q);
     _uiSetTermsDisplay(decodeURIComponent(q));
-    terms=q.split(" ");
-    for(var count=0;count<illegal.length;count++){
+    terms = q.split(" ");
+    for (var count = 0; count < illegal.length; count++) {
         var illegal_index = $.inArray(illegal[count], terms);
-        if (illegal_index  > -1){
-            terms.splice(illegal_index , 1);
+        if (illegal_index > -1) {
+            terms.splice(illegal_index, 1);
             //reset term search, more than one
-            count=count-1;
+            count = count - 1;
         }
     }
-    q=terms.join("%20");
-    if(q) {
-        term_query = "search=plfts." + "%22"+ q  +"%22"+ "&select=incident&order=incident_id.desc";
-    }else{
-        term_query="select=incident&order=incident_id.desc";
+    q = terms.join("%20");
+    if (q) {
+        term_query = "search=plfts." + "%22" + q + "%22" + "&select=incident&order=incident_id.desc";
+    } else {
+        term_query = "select=incident&order=incident_id.desc";
     }
-    url = _MDI.END_POINT + "?"+term_query+"&limit="+_MDI.MAX_RESULTS;
-    return url;
+    return term_query;
 }
+
 
 /**
  * Checks for the addition of the language tag
@@ -70,12 +105,12 @@ function getURL() {
  * @returns {string}
  * @private
  */
-function _checkForLang(query){
-    if(!query) return query;
-    var index=query.lastIndexOf("&");
-    var testString=query.substring(index,query.length-1);
-    if(testString.indexOf("lang")>-1){
-        return query.substring(0,index);
+function _checkForLang(query) {
+    if (!query) return query;
+    var index = query.lastIndexOf("&");
+    var testString = query.substring(index, query.length - 1);
+    if (testString.indexOf("lang") > -1) {
+        return query.substring(0, index);
     }
     return query;
 }
@@ -87,7 +122,7 @@ function _checkForLang(query){
  */
 function _uiSetTermsDisplay(q) {
     if (!q) return;
-    $("#"+_MDI.TERMS_TAG).text(" "+q);
+    $("#" + _MDI.TERMS_TAG).text(" " + q);
 }
 
 function initTableWet() {
@@ -106,12 +141,12 @@ function initTableWet() {
             "cache": true
         },
         'bStateSave': false,
-        "order": [[ 0, "desc" ]],
+        "order": [[0, "desc"]],
         'columns': [
             {data: 'incident.incident_id',
                 'render': function (data, type, full, meta) {
                     //4.0.21 wet bug, with nu
-                    return ""+data+"";
+                    return "" + data + "";
 
                 }
             },
@@ -125,7 +160,7 @@ function initTableWet() {
             {
                 'data': 'incident.device_desc_e',
                 'render': function (data, type, full, meta) {
-                    return deviceDescriptionDisplay(data,full);
+                    return deviceDescriptionDisplay(data, full);
 
                 }
             },
@@ -185,17 +220,17 @@ function deviceDescriptionDisplay(data, full) {
 
 
 
-function problemDetailCodeTypeDisplay(data,full){
+function problemDetailCodeTypeDisplay(data, full) {
     var displayName = "";
     var unique = {};
-            for (var i = 0; i < full.incident.problem_detail.length; i++) {
-                var code=full.incident.problem_detail[i].code_type_e;
-                if (isFrench()) code=full.incident.problem_detail[i].code_type_f;
-                if (!unique.hasOwnProperty(code)){
-                    displayName += code + "<br>";
-                    unique[code]=1;
-                }
-            }
+    for (var i = 0; i < full.incident.problem_detail.length; i++) {
+        var code = full.incident.problem_detail[i].code_type_e;
+        if (isFrench()) code = full.incident.problem_detail[i].code_type_f;
+        if (!unique.hasOwnProperty(code)) {
+            displayName += code + "<br>";
+            unique[code] = 1;
+        }
+    }
     displayName = displayName.substring(0, displayName.length - 4);
     return ((displayName));
 }
@@ -231,17 +266,17 @@ function hazardDisplay(data, full) {
 function problemDetailDisplay(data, full) {
     var displayName = "";
     var unique = {};
-    var code="";
+    var code = "";
     if (!data || data.length === 0) return "";
-    var tag="desc_e";
-    if(isFrench()){
-        tag="desc_f"
+    var tag = "desc_e";
+    if (isFrench()) {
+        tag = "desc_f"
     }
     for (var i = 0; i < data.length; i++) {
-        code=data[i][tag];
-        if (!unique.hasOwnProperty(code)){
+        code = data[i][tag];
+        if (!unique.hasOwnProperty(code)) {
             displayName += code + "<br>";
-            unique[code]=1;
+            unique[code] = 1;
         }
     }
     displayName = displayName.substring(0, displayName.length - 4);
@@ -258,7 +293,7 @@ function arrayNameDisplay(data) {
     if (!data) return "";
     if (!Array.isArray(data)) return $.trim(data);
     for (var i = 0; i < data.length; i++) {
-        displayName += data[i] +" "+ "<br>";
+        displayName += data[i] + " " + "<br>";
         //TODO relying on the space for csv download
     }
     displayName = displayName.substring(0, displayName.length - 4);
