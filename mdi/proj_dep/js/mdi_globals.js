@@ -16,7 +16,7 @@
     MDI.AUTOCOMPLETE_MIN_LENGTH=0;
     MDI.END_POINT="https://rest.hres.ca/mdi/mdi_search";
     MDI.RESULTS_PAGE_NAME="mdi_results.html";
-    MDI.DISCLAIMER_PAGE="/static/content/mdidisclaim-test.php";
+    MDI.DISCLAIMER_PAGE="/static/content/mdidisclaim.php";
     MDI.EXTRACT_PATH="/files/2018-11-30%20extract.zip";
     MDI.DISCLAIM_TAG="disclaimer-link";
     MDI.ZIP_TAG="full-extract-link";
@@ -37,7 +37,8 @@ $(document).ready(function() {
     if (document && document.documentElement && document.documentElement.lang === "fr"){
         window.MDI.DEVICE_TYPE="dispositif";
         window.MDI.COMPANY_TYPE="entreprise";
-        MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"Tout"]]}';
+        window.MDI.DISCLAIMER_PAGE="/static/content/mdidisclaim.php?lang=fr";
+        window.MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"Tout"]]}';
     }
 });
 
