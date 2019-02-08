@@ -55,7 +55,7 @@ $('#linkExcel').on('click', function (event) {
  * Remove characters that interfere with search success
  * @returns {string}
  */
-function getURL() {
+function getURL() { //TODO DELETE
     return createURLNoLimit() + "&limit=" + _MDI.MAX_RESULTS;
 }
 
@@ -63,19 +63,35 @@ function getURL() {
  * Creates the url without any limits
  * @returns {string}
  */
-function createURLNoLimit() {
+function createURLNoLimit() { //TODO DELETE
 
     return _MDI.END_POINT + "?" + _createTermQuery();
 }
 
 /**
- * Creates the term query to inject into an ajax requist
+ * Creates the term query to inject into an ajax requist //TODO DELETE
  * @returns {string}
  * @private
  */
 function _createTermQuery() {
+    var q=_getCleanTerms();
+    if (q) {
+        term_query = "search=plfts." + "%22" + q + "%22" + "&select=incident&order=incident_id.desc";
+    } else {
+        term_query = "select=incident&order=incident_id.desc";
+    }
+    return term_query;
+}
+
+/**
+ * Create the terms string to pass to the server
+ * @returns {string}
+ * @private
+ */
+function _getCleanTerms(){
+
     var term_query = "";
-    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.", "|", ",", "."];
+    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.", "|", ",", ".","<",">"];
     var q = window.location.search.substr(3);
     var terms;
     q = _checkForLang(q);
@@ -90,14 +106,8 @@ function _createTermQuery() {
         }
     }
     q = terms.join("%20");
-    if (q) {
-        term_query = "search=plfts." + "%22" + q + "%22" + "&select=incident&order=incident_id.desc";
-    } else {
-        term_query = "select=incident&order=incident_id.desc";
-    }
-    return term_query;
+    return q;
 }
-
 
 /**
  * Checks for the addition of the language tag
@@ -126,19 +136,28 @@ function _uiSetTermsDisplay(q) {
 }
 
 function initTableWet() {
+
+    var desc="incident.device_desc_e";
+    if(isFrench()){
+        desc="incident.device_desc_f";
+    }
     //TODO update initialization?
     window['wb-tables'] = {
-        "destroy": true,
+        "searching":false,
         "processing": true,
-        "autoWidth": false,
+        "serverSide": true, // recommended to use serverSide when data is more than 10000 rows for performance reasons
         "columnDefs": [
-            {"width": "9%", "targets": 7}
+            {"targets": [5,6],"orderable": false},
+            { "searchable": false, "targets": [0,1,2,3,4,5,6,7] },
+            { "type": "num", "targets": 0 }
         ],
         "ajax": {
-            "url": getURL(),
-            "dataSrc": '',
-            "searching": false,
-            "cache": true
+            "url": _MDI.SERVER_URL,
+            "cache": true,
+            "type": "POST",
+            "data": function ( d ) {
+                d.term_search = _getCleanTerms();
+            }
         },
         'bStateSave': false,
         "order": [[0, "desc"]],
@@ -158,7 +177,7 @@ function initTableWet() {
                 }
             },
             {
-                'data': 'incident.device_desc_e',
+                'data': desc,
                 'render': function (data, type, full, meta) {
                     return deviceDescriptionDisplay(data, full);
 
