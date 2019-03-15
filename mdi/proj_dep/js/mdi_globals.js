@@ -15,17 +15,16 @@
     MDI.AUTOCOMPLETE_DELIMITER=",";
     MDI.AUTOCOMPLETE_MIN_LENGTH=0;
     MDI.END_POINT="https://rest.hres.ca/mdi/mdi_search";
+    MDI.SERVER_SIDE_PROCESSING_END_POINT="mdi_dep/serverSideProcessing.php";
     MDI.RESULTS_PAGE_NAME="mdi_results.html";
     MDI.DISCLAIMER_PAGE="/static/content/mdidisclaim.php";
     MDI.EXTRACT_PATH="/files/2018-11-30%20extract.zip";
     MDI.DISCLAIM_TAG="disclaimer-link";
     MDI.ZIP_TAG="full-extract-link";
     MDI.TERMS_TAG="terms";
-    MDI.MAX_RESULTS=10000;
-    MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"All"]]}';
+    MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100], [10, 25, 50,100]]}';
     MDI.MDALL_FR='https://health-products.canada.ca/mdall-limh/switchlocale.do?lang=fr';
     MDI.MDALL_EN='https://health-products.canada.ca/mdall-limh/';
-    MDI.SERVER_URL='scripts/serverSideProcessing.php';
     window.MDI=MDI;
 })(window);
 
@@ -39,7 +38,6 @@ $(document).ready(function() {
         window.MDI.DEVICE_TYPE="dispositif";
         window.MDI.COMPANY_TYPE="entreprise";
         window.MDI.DISCLAIMER_PAGE="/static/content/mdidisclaim.php?lang=fr";
-        window.MDI.RESULTS_TABLE='{"searching":false,"bDeferRender":true,"lengthMenu":[[10, 25, 50,100, -1], [10, 25, 50,100,"Tout"]]}';
     }
 });
 

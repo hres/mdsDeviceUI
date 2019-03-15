@@ -50,63 +50,14 @@ $('#linkExcel').on('click', function (event) {
     ExportTableToCSV.apply(this, [$('#results-table'), 'mdi_imm.csv']);
 });
 
+
 /**
- * Creates the url for the search functionality
+ * Creates the url for the search functionality using server side processing
  * Remove characters that interfere with search success
  * @returns {string}
  */
-function getURL() { //TODO DELETE
-    return createURLNoLimit() + "&limit=" + _MDI.MAX_RESULTS;
-}
-
-/**
- * Creates the url without any limits
- * @returns {string}
- */
-function createURLNoLimit() { //TODO DELETE
-
-    return _MDI.END_POINT + "?" + _createTermQuery();
-}
-
-/**
- * Creates the term query to inject into an ajax requist //TODO DELETE
- * @returns {string}
- * @private
- */
-function _createTermQuery() {
-    var q=_getCleanTerms();
-    if (q) {
-        term_query = "search=plfts." + "%22" + q + "%22" + "&select=incident&order=incident_id.desc";
-    } else {
-        term_query = "select=incident&order=incident_id.desc";
-    }
-    return term_query;
-}
-
-/**
- * Create the terms string to pass to the server
- * @returns {string}
- * @private
- */
-function _getCleanTerms(){
-
-    var term_query = "";
-    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.", "|", ",", ".","<",">"];
-    var q = window.location.search.substr(3);
-    var terms;
-    q = _checkForLang(q);
-    _uiSetTermsDisplay(decodeURIComponent(q));
-    terms = q.split(" ");
-    for (var count = 0; count < illegal.length; count++) {
-        var illegal_index = $.inArray(illegal[count], terms);
-        if (illegal_index > -1) {
-            terms.splice(illegal_index, 1);
-            //reset term search, more than one
-            count = count - 1;
-        }
-    }
-    q = terms.join("%20");
-    return q;
+function getServerSideProcessingURL() {
+    return _MDI.SERVER_SIDE_PROCESSING_END_POINT;
 }
 
 /**
@@ -358,4 +309,28 @@ function ExportTableToCSV($table, filename) {
         $(this).attr({'download': filename, 'href': csvData, 'target': '_blank'});
     }
 }
+/**
+ * Gets the filtered term string to pass to the server and display in results
+ * @returns {string}
+ * @private
+ */
 
+function _getTerms() {
+    var term_query = "";
+    var illegal = ["of", "&", "and", "?", "!", "or", "+", "-", "no.", "|", ",", ".","<",">"];
+    var q = window.location.search.substr(3);
+    var terms="";
+    q = _checkForLang(q);
+    _uiSetTermsDisplay(decodeURIComponent(q));
+    terms = q.split(" ");
+    for (var count = 0; count < illegal.length; count++) {
+        var illegal_index = $.inArray(illegal[count], terms);
+        if (illegal_index > -1) {
+            terms.splice(illegal_index, 1);
+            //reset term search, more than one
+            count = count - 1;
+        }
+    }
+    q = terms.join(" ");
+    return q;
+}
