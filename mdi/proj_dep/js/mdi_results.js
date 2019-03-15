@@ -1,49 +1,13 @@
-var _MDI = window.MDI;
+var _MDI=window.MDI;
 //TODO clean up table initialization do it manually?
 //add results table tag to global?
-$(document).ready(function () {
+$(document).ready(function() {
     //set attribute dynamically for language
-    _setTotalCount();
-    $("#results-table").attr("data-wb-tables", _MDI.RESULTS_TABLE);
+    $("#results-table").attr("data-wb-tables",_MDI.RESULTS_TABLE);
     initTableWet();
 
 });
 
-/**
- * Gets the count from the header using a separate query to get total
- */
-
-function _setTotalCount() {
-    var url = createURLNoLimit() + "&limit=2";
-    var searchCLassID = "#big-search";
-    $.ajax({
-        url: url,
-        method: "GET",
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader('Range-Unit', 'items');
-            xhr.setRequestHeader('Range', '0-0');
-            xhr.setRequestHeader('Prefer', 'count=exact');
-        },
-        success: function(data, status, xhr){
-            var content = xhr.getResponseHeader('Content-Range');
-            var total = (content.split("/"))[1];
-            var totalobj=$(searchCLassID);
-            if (total==="*") {
-                totalobj.attr("aria-live", "polite").removeClass("hidden")
-            } else if (total > _MDI.MAX_RESULTS) {
-                var countObj=$("#search-count-msg");
-                var baseText = countObj.text();
-                countObj.text(baseText + " (" + total + " total)");
-                totalobj.attr("aria-live", "polite").removeClass("hidden")
-            } else {
-                totalobj.addClass("hidden").attr("aria-live", "off");
-            }
-        },
-        error: function(err) {
-            searchCLassID.addClass("hidden").attr("aria-live", "off");
-        }
-    });
-}
 
 // This must be a hyperlink
 $('#linkExcel').on('click', function (event) {
@@ -66,12 +30,12 @@ function getServerSideProcessingURL() {
  * @returns {string}
  * @private
  */
-function _checkForLang(query) {
-    if (!query) return query;
-    var index = query.lastIndexOf("&");
-    var testString = query.substring(index, query.length - 1);
-    if (testString.indexOf("lang") > -1) {
-        return query.substring(0, index);
+function _checkForLang(query){
+    if(!query) return query;
+    var index=query.lastIndexOf("&");
+    var testString=query.substring(index,query.length-1);
+    if(testString.indexOf("lang")>-1){
+        return query.substring(0,index);
     }
     return query;
 }
@@ -83,40 +47,35 @@ function _checkForLang(query) {
  */
 function _uiSetTermsDisplay(q) {
     if (!q) return;
-    $("#" + _MDI.TERMS_TAG).text(" " + q);
+    $("#"+_MDI.TERMS_TAG).text(" "+q);
 }
 
 function initTableWet() {
-
-    var desc="incident.device_desc_e";
-    if(isFrench()){
-        desc="incident.device_desc_f";
-    }
     //TODO update initialization?
     window['wb-tables'] = {
-        "searching":false,
+        "destroy": true,
         "processing": true,
-        "serverSide": true, // recommended to use serverSide when data is more than 10000 rows for performance reasons
+        "serverSide": true,
+        "autoWidth": false,
         "columnDefs": [
-            {"targets": [5,6],"orderable": false},
-            { "searchable": false, "targets": [0,1,2,3,4,5,6,7] },
-            { "type": "num", "targets": 0 }
+            {"width": "9%", "targets": 7}
         ],
         "ajax": {
-            "url": _MDI.SERVER_URL,
+            "searching": false,
+            "url": getServerSideProcessingURL(),
             "cache": true,
             "type": "POST",
             "data": function ( d ) {
-                d.term_search = _getCleanTerms();
+                d.term_search = _getTerms();
             }
         },
         'bStateSave': false,
-        "order": [[0, "desc"]],
+        "order": [[ 0, "desc" ]],
         'columns': [
             {data: 'incident.incident_id',
                 'render': function (data, type, full, meta) {
                     //4.0.21 wet bug, with nu
-                    return "" + data + "";
+                    return ""+data+"";
 
                 }
             },
@@ -128,9 +87,9 @@ function initTableWet() {
                 }
             },
             {
-                'data': desc,
+                'data': 'incident.device_desc_e',
                 'render': function (data, type, full, meta) {
-                    return deviceDescriptionDisplay(data, full);
+                    return deviceDescriptionDisplay(data,full);
 
                 }
             },
@@ -190,17 +149,17 @@ function deviceDescriptionDisplay(data, full) {
 
 
 
-function problemDetailCodeTypeDisplay(data, full) {
+function problemDetailCodeTypeDisplay(data,full){
     var displayName = "";
     var unique = {};
-    for (var i = 0; i < full.incident.problem_detail.length; i++) {
-        var code = full.incident.problem_detail[i].code_type_e;
-        if (isFrench()) code = full.incident.problem_detail[i].code_type_f;
-        if (!unique.hasOwnProperty(code)) {
-            displayName += code + "<br>";
-            unique[code] = 1;
-        }
-    }
+            for (var i = 0; i < full.incident.problem_detail.length; i++) {
+                var code=full.incident.problem_detail[i].code_type_e;
+                if (isFrench()) code=full.incident.problem_detail[i].code_type_f;
+                if (!unique.hasOwnProperty(code)){
+                    displayName += code + "<br>";
+                    unique[code]=1;
+                }
+            }
     displayName = displayName.substring(0, displayName.length - 4);
     return ((displayName));
 }
@@ -236,17 +195,17 @@ function hazardDisplay(data, full) {
 function problemDetailDisplay(data, full) {
     var displayName = "";
     var unique = {};
-    var code = "";
+    var code="";
     if (!data || data.length === 0) return "";
-    var tag = "desc_e";
-    if (isFrench()) {
-        tag = "desc_f"
+    var tag="desc_e";
+    if(isFrench()){
+        tag="desc_f"
     }
     for (var i = 0; i < data.length; i++) {
-        code = data[i][tag];
-        if (!unique.hasOwnProperty(code)) {
+        code=data[i][tag];
+        if (!unique.hasOwnProperty(code)){
             displayName += code + "<br>";
-            unique[code] = 1;
+            unique[code]=1;
         }
     }
     displayName = displayName.substring(0, displayName.length - 4);
@@ -263,7 +222,7 @@ function arrayNameDisplay(data) {
     if (!data) return "";
     if (!Array.isArray(data)) return $.trim(data);
     for (var i = 0; i < data.length; i++) {
-        displayName += data[i] + " " + "<br>";
+        displayName += data[i] +" "+ "<br>";
         //TODO relying on the space for csv download
     }
     displayName = displayName.substring(0, displayName.length - 4);
